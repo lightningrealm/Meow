@@ -1,9 +1,10 @@
-package com.lr.meow.ui.common
+package com.lr.glassui
 
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.RenderEffect
 import android.graphics.RenderNode
+import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.util.Log
 import androidx.compose.material3.MaterialTheme
@@ -16,9 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Canvas
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -189,11 +188,6 @@ fun Modifier.glassBlurBackground(
         if(barRect.isEmpty||layer.size.width==0){
             return@drawBehind
         }
-        /*layer.renderEffect = BlurEffect(
-            blurRadius,
-            blurRadius,
-            edgeTreatment = TileMode.Clamp
-        )*/
         layer.renderEffect =  buildRefractionChain(
             blurRadius = blurRadius,
             barRect = barRect,
@@ -219,7 +213,7 @@ private fun buildRefractionChain(
     dispersionFactor: Float = 5f,
     rimBrightness: Float = 0.15f
 ): RenderEffect {
-    val shader = android.graphics.RuntimeShader(glassAGSL)
+    val shader = RuntimeShader(glassAGSL)
     shader.setFloatUniform("barCenter", barRect.center.x.toFloat(), barRect.center.y.toFloat())
     shader.setFloatUniform("barHalfSize", barRect.width / 2f, barRect.height / 2f)
     shader.setFloatUniform("iRadius", cornerRadiusPx)

@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Meow"
 include(":app")
+include(":ui-glass")

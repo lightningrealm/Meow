@@ -1,4 +1,4 @@
-package com.lr.meow.ui.common
+package com.lr.glassui
 
 import org.intellij.lang.annotations.Language
 
@@ -20,13 +20,19 @@ val glassAGSL = """
     }
 
     half4 main(float2 coord) {
+        //计算得到画布上的像素
+        //eval的作用就是把画上某个点的像素给你找出来，这里就是把coord上所有点的像素拿出来了
         half4 baseColor = content.eval(coord);
-
+        //把坐标起点移动到bar的中心
         float2 p = coord - barCenter;
+        //通过sdf圆角计算，这个公式不必多说，折叠到第一象限，然后计算在范围内还是范围外
         float d = sdRRect(p, barHalfSize, iRadius);
 
         // influence: 1.0 在区域内, 0.0 在外部
-        float influence = 1.0 - smoothstep(-2.0, 2.0, d);
+        //首先smoothstep(-2.0,2.0,d)代表d=-2.0是0并且小于-2.0时是0，大于2.0是1
+        //则反过来小于等于2.0时是1，大于等于-2.0是0，但是某些设备，前面一个参数必须比后面一个小，所以我们最好减去
+        //float influence = smoothstep(2.0, -2.0, d);
+        float influence = 1-smoothstep(-2.0, 2.0, d);
         if (influence <= 0.0) return baseColor;
 
         // 【关键改动】：边缘折射遮罩 (Edge Mask)
@@ -44,12 +50,15 @@ val glassAGSL = """
         // 【关键修复】：当像素恰好在对称轴上时 (如 p.y = -0.5)，正向差分会导致 grad=(0,0)。
         // normalize(0,0) 会返回 NaN。而 NaN * 0 依然是 NaN，导致屏幕出现一条 1px 的黑线！
         // 因此必须安全地归一化：
+        //这个length函数的本质是根号x方+y方
         float gradLen = length(grad);
+        //如果grad算出来是个0,0，不去判断gradLen是否大于0.0001的话，就会变成dir = (0.0,0.0)/0.0
+        //我们给它个默认向下的方向即可，这个dir乘以edgefactor，如果我们在内部-40还小的地方就为0，乘积自然也为0
         float2 dir = gradLen > 0.0001 ? grad / gradLen : float2(0.0, 1.0);
 
         // 折射强度与色散：仅在边缘生效
         float refraction = iRefractionFactor * edgeFactor;
-        float dispersion = smoothstep(-40.0, 0.0, d) * iDispersionFactor;
+        float dispersion = edgeFactor * iDispersionFactor;
 
         // 向内拉伸，模拟玻璃厚度折射
         float2 offsetR = dir * (refraction + dispersion * 1.5);

@@ -48,7 +48,7 @@ import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
 import com.lr.meow.feature.search.Search
 import com.lr.meow.ui.common.CustomFrostedGlassBottomBar
-import com.lr.meow.ui.common.captureBackground
+import com.lr.glassui.captureBackground
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
 import com.lr.meow.ui.theme.LocalSharedTransitionScope

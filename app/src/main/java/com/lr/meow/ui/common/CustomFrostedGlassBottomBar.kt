@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,9 +30,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lr.glassui.glassBlurBackground
 import com.lr.meow.data.navigation.MyNavTab
 import com.lr.meow.data.navigation.NavQuadruple
 
@@ -116,12 +115,12 @@ fun CustomFrostedGlassBottomBar(
             }
             .background(Brush.verticalGradient(colors = maskColors))
             // 4. 灵魂注入：加一圈半透明的白色边框，模拟玻璃的边缘反光！
-            .border(
+            /*.border(
                 width = 0.8.dp,
                 // 深色背景时边框更亮，模拟玻璃在暗处的高光边缘
                 color = if (isDarkBackground) animatedColor.copy(alpha = 0.7f) else animatedColor.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(32.dp)
-            )
+            )*/
             .then(modifier),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
