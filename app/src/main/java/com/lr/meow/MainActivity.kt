@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import com.lr.meow.data.navigation.EntryDiscoverRoot
 import com.lr.meow.data.navigation.EntryHomeDetail
 import com.lr.meow.data.navigation.EntryHomeRoot
 import com.lr.meow.data.navigation.EntryLibraryRoot
+import com.lr.meow.data.navigation.EntryProfileRoot
 import com.lr.meow.data.navigation.EntrySearchRoot
 import com.lr.meow.data.navigation.MyNavTab
 import com.lr.meow.feature.discover.Discover
@@ -47,12 +49,15 @@ import com.lr.meow.feature.discover.DiscoverDetail
 import com.lr.meow.feature.home.Home
 import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
+import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.search.Search
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
 import com.lr.meow.ui.theme.LocalSharedTransitionScope
 import com.lr.meow.ui.theme.MeowTheme
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +86,7 @@ fun RootView() {
     val discoverStack = rememberNavBackStack(EntryDiscoverRoot)
     val libraryStack = rememberNavBackStack(EntryLibraryRoot)
     val searchStack = rememberNavBackStack(EntrySearchRoot)
+    val profileStack = rememberNavBackStack(EntryProfileRoot)
 
     var currentTab by remember { mutableStateOf(MyNavTab.HOME) }
 
@@ -90,6 +96,7 @@ fun RootView() {
         MyNavTab.DISCOVER -> discoverStack
         MyNavTab.LIBRARY -> libraryStack
         MyNavTab.SEARCH -> searchStack
+        MyNavTab.PROFILE -> profileStack
     }
 
     // Navigation 3 中，返回栈就是一个普通 List。
@@ -97,16 +104,29 @@ fun RootView() {
     // 如果大于 1，说明进到了深层页面，隐藏底栏。
     val isBottomBarVisible = activeStack.size == 1
     var bottomBarHeight by remember { mutableStateOf(0.dp) }
+    
+    // 平滑性能优化：延迟关闭截图。等底栏的 fadeOut 退出动画播完后，再关闭采集，彻底杜绝“突兀感”
+    var isCaptureEnabled by remember { mutableStateOf(true) }
+    LaunchedEffect(isBottomBarVisible) {
+        if (isBottomBarVisible) {
+            isCaptureEnabled = true
+        } else {
+            delay(300.milliseconds) // 等待底栏 250ms 的退出动画以及 sharedBounds 播完
+            isCaptureEnabled = false
+        }
+    }
 
     Box(
         Modifier.fillMaxSize()
     ) {
         val backgroundLayer = LocalRootGraphicsLayer.current!!
-        CompositionLocalProvider(LocalBottomBarPadding provides bottomBarHeight) {
+        CompositionLocalProvider(
+            LocalBottomBarPadding provides bottomBarHeight
+        ) {
             NavDisplay(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
-                    .captureBackground(backgroundLayer),
+                    .then(if (isCaptureEnabled) Modifier.captureBackground(backgroundLayer) else Modifier),
                 backStack = activeStack,
                 entryProvider = entryProvider {
                     /**
@@ -144,6 +164,10 @@ fun RootView() {
                      * **/
                     entry<EntrySearchRoot> {
                         Search()
+                    }
+
+                    entry<EntryProfileRoot>{
+                        Profile()
                     }
                 }
             )

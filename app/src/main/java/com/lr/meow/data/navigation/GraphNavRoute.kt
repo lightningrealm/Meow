@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * 用于stack模式匹配
  * **/
 enum class MyNavTab{
-    HOME,DISCOVER,LIBRARY,SEARCH
+    HOME,DISCOVER,LIBRARY,SEARCH,PROFILE
 }
 
 /**
@@ -40,3 +40,7 @@ data class EntrySearchDetail(
     val keyWords:String
 ): NavKey
 
+/**
+ * ##PRofileGraph对应的Destination
+ * **/
+@Serializable data object EntryProfileRoot: NavKey

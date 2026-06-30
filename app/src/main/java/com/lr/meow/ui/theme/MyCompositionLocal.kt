@@ -12,3 +12,4 @@ val LocalBottomBarPadding = compositionLocalOf {
 
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 val LocalRootGraphicsLayer = compositionLocalOf<GraphicsLayer?>{ null }
+val LocalIsMusicPlaying = compositionLocalOf { false }
