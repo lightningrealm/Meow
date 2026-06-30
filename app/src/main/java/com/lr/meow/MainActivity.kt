@@ -14,8 +14,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.lr.glassui.captureBackground
 import com.lr.meow.data.navigation.EntryDiscoverDetail
 import com.lr.meow.data.navigation.EntryDiscoverRoot
 import com.lr.meow.data.navigation.EntryHomeDetail
@@ -47,8 +48,7 @@ import com.lr.meow.feature.home.Home
 import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
 import com.lr.meow.feature.search.Search
-import com.lr.meow.ui.common.CustomFrostedGlassBottomBar
-import com.lr.glassui.captureBackground
+import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
 import com.lr.meow.ui.theme.LocalSharedTransitionScope
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MeowTheme {
                 val backgroundLayer = rememberGraphicsLayer()
-                SharedTransitionLayout{
+                SharedTransitionLayout {
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this,
                         LocalRootGraphicsLayer provides backgroundLayer
@@ -75,17 +75,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RootView(){
+fun RootView() {
     val density = LocalDensity.current
     val homeStack = rememberNavBackStack(EntryHomeRoot)
     val discoverStack = rememberNavBackStack(EntryDiscoverRoot)
     val libraryStack = rememberNavBackStack(EntryLibraryRoot)
     val searchStack = rememberNavBackStack(EntrySearchRoot)
-    
+
     var currentTab by remember { mutableStateOf(MyNavTab.HOME) }
 
     // 获取当前正在显示的栈
-    val activeStack = when(currentTab){
+    val activeStack = when (currentTab) {
         MyNavTab.HOME -> homeStack
         MyNavTab.DISCOVER -> discoverStack
         MyNavTab.LIBRARY -> libraryStack
@@ -100,7 +100,7 @@ fun RootView(){
 
     Box(
         Modifier.fillMaxSize()
-    ){
+    ) {
         val backgroundLayer = LocalRootGraphicsLayer.current!!
         CompositionLocalProvider(LocalBottomBarPadding provides bottomBarHeight) {
             NavDisplay(
@@ -128,7 +128,7 @@ fun RootView(){
                         Discover()
                     }
 
-                    entry<EntryDiscoverDetail>{
+                    entry<EntryDiscoverDetail> {
                         DiscoverDetail()
                     }
 
@@ -148,32 +148,37 @@ fun RootView(){
                 }
             )
         }
-        AnimatedVisibility(
-            visible = isBottomBarVisible,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically(
-                initialOffsetY = {it},
-                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-            )+ fadeIn(),
-            exit = slideOutVertically(
-                targetOffsetY = {it},
-                animationSpec = tween(
-                    durationMillis = 250,
-                    easing = FastOutSlowInEasing
-                )
-            )+ fadeOut()
-        ) {
-            CustomFrostedGlassBottomBar(
+        val sharedTransitionScope = LocalSharedTransitionScope.current!!
+        with(sharedTransitionScope) {
+            AnimatedVisibility(
+                visible = isBottomBarVisible,
                 modifier = Modifier
-                    .onGloballyPositioned{coordinates ->
-                        bottomBarHeight = with(density){
-                            coordinates.size.height.toDp()+16.dp
-                        }
-                    },
-                currentTab = currentTab,
-                graphicsLayer = backgroundLayer,
-            ) { selectedTab ->
-                currentTab = selectedTab
+                    .align(Alignment.BottomCenter)
+                    .renderInSharedTransitionScopeOverlay(zIndexInOverlay = 1f),
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                ) + fadeIn(),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(
+                        durationMillis = 250,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeOut()
+            ) {
+                CustomFrostedGlassBottomBar(
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            bottomBarHeight = with(density) {
+                                coordinates.size.height.toDp() + 16.dp
+                            }
+                        },
+                    currentTab = currentTab,
+                    graphicsLayer = backgroundLayer,
+                ) { selectedTab ->
+                    currentTab = selectedTab
+                }
             }
         }
     }
@@ -183,5 +188,5 @@ fun RootView(){
 @Preview(showBackground = true)
 @Composable
 fun RootPreview() {
-    Home {  }
+    Home { }
 }

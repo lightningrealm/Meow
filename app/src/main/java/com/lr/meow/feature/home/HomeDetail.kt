@@ -25,7 +25,6 @@ fun HomeDetail(id: Int){
                 .sharedBounds(
                     sharedContentState = rememberSharedContentState("card_hero_$id"),
                     animatedVisibilityScope = animatedScope,
-                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                     clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(0.dp))
                 )
                 .background(Color.White)

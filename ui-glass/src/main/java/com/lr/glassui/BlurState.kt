@@ -27,7 +27,9 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.unit.IntRect
 import androidx.core.graphics.get
+import androidx.core.graphics.toColor
 import androidx.core.graphics.withSave
+import com.lr.glassui.model.GlassEnvironment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.time.Duration.Companion.milliseconds
@@ -129,7 +131,7 @@ fun Modifier.glassBlurBackground(
 fun Modifier.glassBlurBackground(
     layer: GraphicsLayer,
     blurRadius: Float,
-    onDarkBackground: (Boolean) -> Unit = {}
+    onDarkBackground: (GlassEnvironment) -> Unit = {}
 ): Modifier = composed {
     var barRect by remember { mutableStateOf(IntRect.Zero) }
     
@@ -171,7 +173,13 @@ fun Modifier.glassBlurBackground(
                     Log.d("BlurState", "Center($centerX, $sampleY), RGB($r,$g,$b), Luminance: $luminance")
                     
                     // 回传是否为暗色背景
-                    onDarkBackground(luminance < 128)
+                    onDarkBackground(
+                        GlassEnvironment(
+                            dominantColor = androidx.compose.ui.graphics.Color(pixelColor),
+                            luminance = luminance,
+                            isDark = luminance < 128
+                        )
+                    )
                 } catch (e: Exception) {
                     Log.e("BlurState", "Capture failed: ${e.message}")
                     // 图层可能尚未准备好

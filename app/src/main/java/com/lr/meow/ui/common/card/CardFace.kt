@@ -49,7 +49,6 @@ fun CardFace(
                 .sharedBounds(
                     sharedContentState = rememberSharedContentState(sharedKey),
                     animatedVisibilityScope = animatedScope,
-                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                     clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(20.dp))
                 )
                 .clickable {

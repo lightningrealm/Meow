@@ -1,9 +1,10 @@
-package com.lr.meow.ui.common
+package com.lr.meow.ui.common.component.glass
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -36,12 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lr.glassui.glassBlurBackground
+import com.lr.glassui.model.GlassEnvironment
 import com.lr.meow.data.navigation.MyNavTab
 import com.lr.meow.data.navigation.NavQuadruple
 
@@ -53,28 +55,31 @@ fun CustomFrostedGlassBottomBar(
     graphicsLayer: GraphicsLayer,
     onTabSelected: (MyNavTab)-> Unit
 ){
-    var isDarkBackground by remember { mutableStateOf(false) }
-    val animatedColor by animateColorAsState(
-        targetValue = if(isDarkBackground) Color.White else Color.Black,
-        animationSpec = tween(500)
-    )
-    val reverseAnimatedColor by animateColorAsState(
-        targetValue = if(isDarkBackground) Color.Black else Color.White,
+    var glassEnv by remember {
+        mutableStateOf(
+            GlassEnvironment(
+                dominantColor = Color.White,
+                luminance = (-1f).toDouble(),
+                isDark = false
+            )
+        )
+    }
+    // 1. 动态玻璃底色：在基础黑白玻璃上，融入 20% 的环境主色调
+    val targetGlassTint = remember(glassEnv) {
+        val baseGlass = if (glassEnv.isDark) Color(0xFF111111) else Color(0xFFEEEEEE)
+        lerp(baseGlass, glassEnv.dominantColor, 0.2f)
+    }
+    val glassTint by animateColorAsState(
+        targetValue = targetGlassTint.copy(alpha = if (glassEnv.isDark) 0.5f else 0.7f),
         animationSpec = tween(500)
     )
 
-    // 动态遮罩：背景暗时铺白底，背景亮时铺黑底，保证对比度
-    val maskColors = if (isDarkBackground) {
-        listOf(
-            animatedColor.copy(alpha = 0.5f), // 加重，让底栏在深色背景上浮现
-            animatedColor.copy(alpha = 0.3f)
-        )
-    } else {
-        listOf(
-            animatedColor.copy(alpha = 0.5f),
-            animatedColor.copy(alpha = 0.4f)
-        )
-    }
+
+    // 3. 动态高光边框 (Rim Light)
+    val borderLight by animateColorAsState(
+        targetValue = glassEnv.dominantColor.copy(alpha = if (glassEnv.isDark) 0.6f else 0.25f),
+        animationSpec = tween(500)
+    )
 
     val tabs = listOf(
         NavQuadruple(
@@ -110,17 +115,16 @@ fun CustomFrostedGlassBottomBar(
             .fillMaxWidth()
             .height(64.dp)
             .clip(RoundedCornerShape(32.dp))
-            .glassBlurBackground(graphicsLayer, blurRadius = 15f) { isDark ->
-                isDarkBackground = isDark
+            .glassBlurBackground(graphicsLayer, blurRadius = 15f) { glassEnviroment ->
+                glassEnv = glassEnviroment
             }
-            .background(Brush.verticalGradient(colors = maskColors))
-            // 4. 灵魂注入：加一圈半透明的白色边框，模拟玻璃的边缘反光！
-            /*.border(
+            .background(glassTint)
+            // 4. 动态环境光边框：使用带透明度的环境主色调，打造物理倒角折射高光
+            .border(
                 width = 0.8.dp,
-                // 深色背景时边框更亮，模拟玻璃在暗处的高光边缘
-                color = if (isDarkBackground) animatedColor.copy(alpha = 0.7f) else animatedColor.copy(alpha = 0.3f),
+                color = borderLight,
                 shape = RoundedCornerShape(32.dp)
-            )*/
+            )
             .then(modifier),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
@@ -128,13 +132,17 @@ fun CustomFrostedGlassBottomBar(
         tabs.forEach { (tabTarget,outlinedIcon,icon, name) ->
             val isSelected = currentTab == tabTarget
             val interactionSource  = remember { MutableInteractionSource() }
-            // reverseAnimatedColor 与遮罩互补，选中项用全不透明，未选中用半透明
-            val itemColor = reverseAnimatedColor.copy(
-                alpha = when{
-                    isSelected -> 1f
-                    isDarkBackground -> 0.6f
-                    else -> 0.4f
-                }
+            // 环境感知与反色配色：真正的明暗反转（深色底配白字，亮色底配黑字）
+            val targetColor = if (glassEnv.isDark) {
+                Color.White.copy(alpha = if (isSelected) 1f else 0.6f)
+            } else {
+                Color.Black.copy(alpha = if (isSelected) 1f else 0.5f)
+            }
+            
+            // 为每个 Tab 注入独立的色彩插值动画（包含点击选中、以及背景流明切换时的平滑过渡）
+            val itemColor by animateColorAsState(
+                targetValue = targetColor,
+                animationSpec = tween(400)
             )
             Column(
                 modifier = Modifier
