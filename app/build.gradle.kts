@@ -45,6 +45,7 @@ android {
 }
 
 dependencies {
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -57,9 +58,25 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.koin.core)
+    implementation(libs.tink.android)
+
+    // Paging
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.androidx.paging.runtime)
+
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
     implementation(project(":ui-glass"))
+    implementation(project(":core-model"))
+    implementation(project(":core-player"))
+    implementation(project(":core-network"))
+    implementation(project(":core-datastore"))
+    implementation(project(":core-database"))
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

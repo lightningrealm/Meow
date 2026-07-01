@@ -25,3 +25,8 @@ dependencyResolutionManagement {
 rootProject.name = "Meow"
 include(":app")
 include(":ui-glass")
+include(":core-player")
+include(":core-network")
+include(":core-model")
+include(":core-database")
+include(":core-datastore")

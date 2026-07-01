@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.unit.IntRect
 import androidx.core.graphics.get
-import androidx.core.graphics.toColor
 import androidx.core.graphics.withSave
 import com.lr.glassui.model.GlassEnvironment
 import kotlinx.coroutines.delay
@@ -155,7 +154,8 @@ fun Modifier.glassBlurBackground(
                     // 现在 layer 里有实体背景色了，可以在底栏中心直接采样
                     // 这个点对应的是底栏后面的真实内容（卡片或背景色）
                     val sampleY = barRect.center.y.coerceIn(0, bmpH - 1)
-                    Log.d("BlurState", "BitmapSize=${bmpW}x${bmpH}, BarRect=${barRect}, SampleAt=($centerX,$sampleY)")
+
+                    //Log.d("BlurState", "BitmapSize=${bmpW}x${bmpH}, BarRect=${barRect}, SampleAt=($centerX,$sampleY)")
                     
                     // 注意：toImageBitmap 返回的是 GPU 硬件位图 (Config.HARDWARE)
                     // 不能直接调用 getPixel()，必须先 Copy 一份到 CPU 内存中
@@ -170,7 +170,7 @@ fun Modifier.glassBlurBackground(
                     // 用完立即回收，防止每秒复制产生大量 GC 卡顿
                     softwareBmp.recycle()
                     
-                    Log.d("BlurState", "Center($centerX, $sampleY), RGB($r,$g,$b), Luminance: $luminance")
+                    //Log.d("BlurState", "Center($centerX, $sampleY), RGB($r,$g,$b), Luminance: $luminance")
                     
                     // 回传是否为暗色背景
                     onDarkBackground(

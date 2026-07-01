@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 为特定域名开启明文流量许可 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- 需要允许 HTTP 的域名，includeSubdomains 表示其子域名也同样生效 -->
+        <domain includeSubdomains="true">p5.music.126.net</domain>
+        <domain includeSubdomains="true">p1.music.126.net</domain>
+    </domain-config>
+    <!-- 其他域名会默认使用 base-config 的策略，从 Android 9 起默认为禁止明文流量 -->
+</network-security-config>

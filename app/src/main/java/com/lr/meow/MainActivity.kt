@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ import com.lr.meow.feature.discover.DiscoverDetail
 import com.lr.meow.feature.home.Home
 import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
+import com.lr.meow.feature.login.Login
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.search.Search
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
@@ -57,6 +59,7 @@ import com.lr.meow.ui.theme.LocalRootGraphicsLayer
 import com.lr.meow.ui.theme.LocalSharedTransitionScope
 import com.lr.meow.ui.theme.MeowTheme
 import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
@@ -80,7 +83,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RootView() {
+fun RootView(viewModel: MainViewModel = koinViewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+    
     val density = LocalDensity.current
     val homeStack = rememberNavBackStack(EntryHomeRoot)
     val discoverStack = rememberNavBackStack(EntryDiscoverRoot)
@@ -88,10 +93,8 @@ fun RootView() {
     val searchStack = rememberNavBackStack(EntrySearchRoot)
     val profileStack = rememberNavBackStack(EntryProfileRoot)
 
-    var currentTab by remember { mutableStateOf(MyNavTab.HOME) }
-
     // 获取当前正在显示的栈
-    val activeStack = when (currentTab) {
+    val activeStack = when (uiState.currentTab) {
         MyNavTab.HOME -> homeStack
         MyNavTab.DISCOVER -> discoverStack
         MyNavTab.LIBRARY -> libraryStack
@@ -121,7 +124,9 @@ fun RootView() {
     ) {
         val backgroundLayer = LocalRootGraphicsLayer.current!!
         CompositionLocalProvider(
-            LocalBottomBarPadding provides bottomBarHeight
+            LocalBottomBarPadding provides bottomBarHeight,
+            LocalIsLogin provides uiState.isLoggedIn,
+            LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) }
         ) {
             NavDisplay(
                 modifier = Modifier
@@ -198,13 +203,17 @@ fun RootView() {
                                 coordinates.size.height.toDp() + 16.dp
                             }
                         },
-                    currentTab = currentTab,
+                    currentTab = uiState.currentTab,
                     graphicsLayer = backgroundLayer,
                 ) { selectedTab ->
-                    currentTab = selectedTab
+                    viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
                 }
             }
         }
+        Login(
+            showBottomSheet = uiState.showLoginSheet,
+            onDismissRequest = { viewModel.dispatch(MainIntent.DismissLogin) }
+        )
     }
 }
 

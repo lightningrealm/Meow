@@ -1,152 +1,389 @@
 package com.lr.meow.feature.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import coil3.compose.AsyncImage
+import com.lr.meow.LocalIsLogin
+import com.lr.meow.LocalRequireAuth
 import com.lr.meow.ui.theme.LocalBottomBarPadding
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Profile() {
+fun Profile(viewModel: ProfileViewModel = koinViewModel()) {
     val colorScheme = MaterialTheme.colorScheme
+    val isLoggedIn = LocalIsLogin.current
+    val requireAuth = LocalRequireAuth.current
+    val uiState by viewModel.uiState.collectAsState()
+    val playlists by viewModel.playlistsFlow.collectAsState()
+    val currentUid by viewModel.currentUid.collectAsState()
 
-    val publicPlaylists = listOf(
-        "Late Night Coding" to "24 tracks",
-        "Workout Hype" to "50 tracks",
-        "Coffee Shop Vibes" to "112 tracks",
-        "Focus Flow" to "30 tracks"
-    )
+    val createdPlaylists = remember(playlists, currentUid) {
+        playlists.filter { it.creator?.userId == currentUid }
+    }
+    val subscribedPlaylists = remember(playlists, currentUid) {
+        playlists.filter { it.creator?.userId != currentUid }
+    }
+
+    var isCreatedExpanded by remember { mutableStateOf(true) }
+    var isSubscribedExpanded by remember { mutableStateOf(true) }
+
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            viewModel.dispatch(ProfileIntent.RefreshProfile)
+        }
+    }
 
     Box(
         Modifier
             .fillMaxSize()
             .background(colorScheme.background)
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(top = 20.dp, bottom = LocalBottomBarPadding.current),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Profile Header
-            item {
-                Spacer(Modifier.statusBarsPadding())
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = colorScheme.onBackground
+        if (isLoggedIn && uiState.userProfile?.backgroundUrl != null) {
+            AsyncImage(
+                model = uiState.userProfile?.backgroundUrl,
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            // Gradient overlay to ensure text is readable
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                colorScheme.background.copy(alpha = 0.3f),
+                                colorScheme.background.copy(alpha = 0.8f),
+                                colorScheme.background
+                            )
                         )
-                    }
-                }
-                
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Avatar
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .background(colorScheme.primary.copy(alpha = 0.2f))
                     )
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        text = "Lightning Duke",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorScheme.onBackground
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "128 Followers",
-                            fontSize = 14.sp,
-                            color = colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = "42 Following",
-                            fontSize = 14.sp,
-                            color = colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
-                    }
-                    Spacer(Modifier.height(24.dp))
-                    Button(
-                        onClick = { /*TODO*/ },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorScheme.onBackground,
-                            contentColor = colorScheme.background
-                        ),
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.padding(horizontal = 32.dp).height(48.dp)
-                    ) {
-                        Text("Edit Profile", fontWeight = FontWeight.Bold)
-                    }
-                }
-                Spacer(Modifier.height(32.dp))
-            }
+            )
+        }
 
-            // Public Playlists
-            item {
+        if (!isLoggedIn) {
+            // Unauthenticated UI
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = "Public Playlists",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
+                    text = "Discover More Music",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onBackground
                 )
-            }
-
-            items(publicPlaylists.size) { index ->
-                val (title, trackCount) = publicPlaylists[index]
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Login to access your profile and library",
+                    fontSize = 14.sp,
+                    color = colorScheme.onBackground.copy(alpha = 0.6f)
+                )
+                Spacer(Modifier.height(32.dp))
+                Button(
+                    onClick = { requireAuth() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary
+                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.padding(horizontal = 32.dp).height(48.dp)
                 ) {
-                    Box(
+                    Text("Login Now", fontWeight = FontWeight.Bold)
+                }
+            }
+        } else if (uiState.isLoading && uiState.userProfile == null) {
+            // Loading UI (only when no cached data is available)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = colorScheme.primary)
+            }
+        } else {
+            // Authenticated Profile UI
+            LazyColumn(
+                contentPadding = PaddingValues(top = 20.dp, bottom = LocalBottomBarPadding.current),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Profile Header
+                item {
+                    Spacer(Modifier.statusBarsPadding())
+                    Row(
                         modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(colorScheme.surfaceVariant)
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    Column(
-                        modifier = Modifier.weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        horizontalArrangement = Arrangement.End
                     ) {
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = colorScheme.onBackground
+                            )
+                        }
+                    }
+                    
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Avatar
+                        if (uiState.userProfile?.avatarUrl != null) {
+                            AsyncImage(
+                                model = uiState.userProfile?.avatarUrl,
+                                contentDescription = "Avatar",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .background(colorScheme.primary.copy(alpha = 0.2f))
+                            )
+                        }
+                        Spacer(Modifier.height(16.dp))
                         Text(
-                            text = title,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
+                            text = uiState.userProfile?.nickname ?: "Guest",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
                             color = colorScheme.onBackground
                         )
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${uiState.followerCount ?: 0} Followers",
+                                fontSize = 14.sp,
+                                color = colorScheme.onBackground.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = "${uiState.followingCount ?: 0} Following",
+                                fontSize = 14.sp,
+                                color = colorScheme.onBackground.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = "Lv.${uiState.userLevel ?: 0}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorScheme.primary
+                            )
+                        }
+                        Spacer(Modifier.height(24.dp))
+                        Button(
+                            onClick = { viewModel.logout() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorScheme.onBackground,
+                                contentColor = colorScheme.background
+                            ),
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier.padding(horizontal = 32.dp).height(48.dp)
+                        ) {
+                            Text("Logout", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(Modifier.height(32.dp))
+                }
+                
+                // Playlists Title
+                if (playlists.isNotEmpty()) {
+                    item {
                         Text(
-                            text = trackCount,
-                            fontSize = 14.sp,
-                            color = colorScheme.onBackground.copy(alpha = 0.6f)
+                            text = "Playlists",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colorScheme.onBackground,
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
                         )
+                    }
+                }
+
+                // Created Playlists
+                if (createdPlaylists.isNotEmpty()) {
+                    item(key = "header_created", contentType = "header") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isCreatedExpanded = !isCreatedExpanded }
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "我的歌单",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = colorScheme.onBackground
+                            )
+                            Icon(
+                                imageVector = if (isCreatedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Expand/Collapse",
+                                tint = colorScheme.onBackground.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+                if (isCreatedExpanded) {
+                    items(
+                        items = createdPlaylists,
+                        key = { "playlist_${it.id}" },
+                        contentType = { "playlist" }
+                    ) { playlist ->
+                        Row(
+                            modifier = Modifier
+                                .animateItem()
+                                .fillMaxWidth()
+                                .clickable { /*TODO*/ }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = playlist.coverImgUrl,
+                                contentDescription = "Playlist Cover",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(colorScheme.surfaceVariant)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = playlist.name,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colorScheme.onBackground,
+                                    maxLines = 1
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "${playlist.trackCount} tracks",
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Subscribed Playlists
+                if (subscribedPlaylists.isNotEmpty()) {
+                    item(key = "header_subscribed", contentType = "header") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isSubscribedExpanded = !isSubscribedExpanded }
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "收藏的歌单",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = colorScheme.onBackground
+                            )
+                            Icon(
+                                imageVector = if (isSubscribedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Expand/Collapse",
+                                tint = colorScheme.onBackground.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+                if (isSubscribedExpanded) {
+                    items(
+                        items = subscribedPlaylists,
+                        key = { "playlist_${it.id}" },
+                        contentType = { "playlist" }
+                    ) { playlist ->
+                        Row(
+                            modifier = Modifier
+                                .animateItem()
+                                .fillMaxWidth()
+                                .clickable { /*TODO*/ }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = playlist.coverImgUrl,
+                                contentDescription = "Playlist Cover",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(colorScheme.surfaceVariant)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = playlist.name,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colorScheme.onBackground,
+                                    maxLines = 1
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "${playlist.trackCount} tracks",
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
                     }
                 }
             }
