@@ -8,7 +8,7 @@ import com.lr.core.network.model.UserSubcountResponse
 /**
  * MVI Contract for Profile Screen
  */
-data class ProfileUiState(
+data class SharedUserUiState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMessage: String? = null,
@@ -24,6 +24,6 @@ data class ProfileUiState(
     val followingCount: Int? = null
 )
 
-sealed interface ProfileIntent {
-    object RefreshProfile : ProfileIntent
+sealed class SharedUserIntent {
+    object RefreshProfile : SharedUserIntent()
 }

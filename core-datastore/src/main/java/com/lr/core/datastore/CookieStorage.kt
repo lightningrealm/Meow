@@ -18,8 +18,8 @@ class CookieStorage(private val context: Context) {
     }
 
     val isLoggedInFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        // Simplified check: if we have cookies for lightningrealm.cloud, we consider it logged in.
-        val encryptedCookies = preferences[stringPreferencesKey("cookie_www.lightningrealm.cloud")]
+        // Simplified check: if we have cookies for 112.124.4.51, we consider it logged in.
+        val encryptedCookies = preferences[stringPreferencesKey("cookie_112.124.4.51")]
         val cookies = encryptedCookies?.let { TinkManager.decrypt(it) } ?: ""
         cookies.contains("MUSIC_U") || cookies.isNotEmpty()
     }.distinctUntilChanged()

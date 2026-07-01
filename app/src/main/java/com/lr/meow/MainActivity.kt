@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +45,7 @@ import com.lr.meow.data.navigation.EntryHomeRoot
 import com.lr.meow.data.navigation.EntryLibraryRoot
 import com.lr.meow.data.navigation.EntryProfileRoot
 import com.lr.meow.data.navigation.EntrySearchRoot
+import com.lr.meow.data.navigation.EntryPlaylistDetail
 import com.lr.meow.data.navigation.MyNavTab
 import com.lr.meow.feature.discover.Discover
 import com.lr.meow.feature.discover.DiscoverDetail
@@ -53,6 +55,7 @@ import com.lr.meow.feature.library.Library
 import com.lr.meow.feature.login.Login
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.search.Search
+import com.lr.meow.feature.playlist.PlaylistDetail
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
@@ -69,13 +72,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MeowTheme {
                 val backgroundLayer = rememberGraphicsLayer()
-                SharedTransitionLayout {
-                    CompositionLocalProvider(
-                        LocalSharedTransitionScope provides this,
-                        LocalRootGraphicsLayer provides backgroundLayer
-                    ) {
-                        RootView()
-                    }
+                CompositionLocalProvider(
+                    LocalRootGraphicsLayer provides backgroundLayer
+                ) {
+                    RootView()
                 }
             }
         }
@@ -83,9 +83,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RootView(viewModel: MainViewModel = koinViewModel()) {
+fun RootView(
+    viewModel: MainViewModel = koinViewModel(),
+    sharedUserViewModel: com.lr.meow.feature.profile.SharedUserViewModel = koinViewModel()
+) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     val density = LocalDensity.current
     val homeStack = rememberNavBackStack(EntryHomeRoot)
     val discoverStack = rememberNavBackStack(EntryDiscoverRoot)
@@ -107,7 +110,7 @@ fun RootView(viewModel: MainViewModel = koinViewModel()) {
     // 如果大于 1，说明进到了深层页面，隐藏底栏。
     val isBottomBarVisible = activeStack.size == 1
     var bottomBarHeight by remember { mutableStateOf(0.dp) }
-    
+
     // 平滑性能优化：延迟关闭截图。等底栏的 fadeOut 退出动画播完后，再关闭采集，彻底杜绝“突兀感”
     var isCaptureEnabled by remember { mutableStateOf(true) }
     LaunchedEffect(isBottomBarVisible) {
@@ -116,6 +119,12 @@ fun RootView(viewModel: MainViewModel = koinViewModel()) {
         } else {
             delay(300.milliseconds) // 等待底栏 250ms 的退出动画以及 sharedBounds 播完
             isCaptureEnabled = false
+        }
+    }
+
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn) {
+            sharedUserViewModel.dispatch(com.lr.meow.feature.profile.SharedUserIntent.RefreshProfile)
         }
     }
 
@@ -128,86 +137,118 @@ fun RootView(viewModel: MainViewModel = koinViewModel()) {
             LocalIsLogin provides uiState.isLoggedIn,
             LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) }
         ) {
-            NavDisplay(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .then(if (isCaptureEnabled) Modifier.captureBackground(backgroundLayer) else Modifier),
-                backStack = activeStack,
-                entryProvider = entryProvider {
-                    /**
-                     * Home对应栈
-                     * **/
-                    entry<EntryHomeRoot> {
-                        Home { clickedId ->
-                            homeStack.add(EntryHomeDetail(clickedId))
-                        }
-                    }
-                    entry<EntryHomeDetail> {
-                        HomeDetail(it.id)
-                    }
-
-                    /**
-                     * Discover对应栈
-                     * **/
-                    entry<EntryDiscoverRoot> {
-                        Discover()
-                    }
-
-                    entry<EntryDiscoverDetail> {
-                        DiscoverDetail()
-                    }
-
-                    /**
-                     * Library对应栈
-                     * **/
-                    entry<EntryLibraryRoot> {
-                        Library()
-                    }
-
-                    /**
-                     * Search对应栈
-                     * **/
-                    entry<EntrySearchRoot> {
-                        Search()
-                    }
-
-                    entry<EntryProfileRoot>{
-                        Profile()
-                    }
-                }
-            )
-        }
-        val sharedTransitionScope = LocalSharedTransitionScope.current!!
-        with(sharedTransitionScope) {
-            AnimatedVisibility(
-                visible = isBottomBarVisible,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .renderInSharedTransitionScopeOverlay(zIndexInOverlay = 1f),
-                enter = slideInVertically(
-                    initialOffsetY = { it },
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                ) + fadeIn(),
-                exit = slideOutVertically(
-                    targetOffsetY = { it },
-                    animationSpec = tween(
-                        durationMillis = 250,
-                        easing = FastOutSlowInEasing
-                    )
-                ) + fadeOut()
+            SharedTransitionLayout(
+                modifier = Modifier.then(
+                    if (isCaptureEnabled) Modifier.captureBackground(
+                        backgroundLayer
+                    ) else Modifier
+                )
             ) {
-                CustomFrostedGlassBottomBar(
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            bottomBarHeight = with(density) {
-                                coordinates.size.height.toDp() + 16.dp
+                CompositionLocalProvider(
+                    LocalSharedTransitionScope provides this
+                ) {
+                    NavDisplay(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                        backStack = activeStack,
+                        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null },
+                        popTransitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null },
+                        predictivePopTransitionSpec = { _ -> fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null },
+                        entryProvider = entryProvider {
+                            /**
+                             * Home对应栈
+                             * **/
+                            entry<EntryHomeRoot> {
+                                Home { clickedId ->
+                                    homeStack.add(EntryHomeDetail(clickedId))
+                                }
                             }
-                        },
-                    currentTab = uiState.currentTab,
-                    graphicsLayer = backgroundLayer,
-                ) { selectedTab ->
-                    viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
+                            entry<EntryHomeDetail> {
+                                HomeDetail(it.id)
+                            }
+
+                            /**
+                             * Discover对应栈
+                             * **/
+                            entry<EntryDiscoverRoot> {
+                                Discover(onPlaylistClick = { playlistId, coverImgUrl ->
+                                    discoverStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                })
+                            }
+
+                            entry<EntryDiscoverDetail> {
+                                DiscoverDetail()
+                            }
+
+                            /**
+                             * Library对应栈
+                             * **/
+                            entry<EntryLibraryRoot> {
+                                Library(
+                                    viewModel = sharedUserViewModel,
+                                    onPlaylistClick = { playlistId, coverImgUrl ->
+                                        libraryStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                    }
+                                )
+                            }
+
+                            /**
+                             * Search对应栈
+                             * **/
+                            entry<EntrySearchRoot> {
+                                Search()
+                            }
+
+                            entry<EntryProfileRoot> {
+                                Profile(
+                                    viewModel = sharedUserViewModel,
+                                    onPlaylistClick = { playlistId, coverImgUrl ->
+                                        profileStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                    }
+                                )
+                            }
+                            
+                            /**
+                             * Playlist Detail (Can be in any stack)
+                             * **/
+                            entry<EntryPlaylistDetail> {
+                                PlaylistDetail(
+                                    playlistId = it.id,
+                                    coverImgUrl = it.coverImgUrl,
+                                    onBack = { activeStack.removeAt(activeStack.lastIndex) }
+                                )
+                            }
+                        }
+                    )
                 }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = isBottomBarVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+            ) + fadeIn(),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(
+                    durationMillis = 250,
+                    easing = FastOutSlowInEasing
+                )
+            ) + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            CustomFrostedGlassBottomBar(
+                modifier = Modifier
+                    .onGloballyPositioned { coordinates ->
+                        bottomBarHeight = with(density) {
+                            coordinates.size.height.toDp() + 16.dp
+                        }
+                    },
+                currentTab = uiState.currentTab,
+                graphicsLayer = backgroundLayer,
+            ) { selectedTab ->
+                viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
             }
         }
         Login(

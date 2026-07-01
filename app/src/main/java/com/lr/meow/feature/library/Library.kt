@@ -1,142 +1,230 @@
 package com.lr.meow.feature.library
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.lr.meow.LocalIsLogin
+import com.lr.meow.LocalRequireAuth
+import com.lr.meow.feature.profile.SharedUserViewModel
+import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import com.lr.meow.ui.theme.LocalSharedTransitionScope
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.core.spring
 
 @Composable
-fun Library() {
+fun Library(
+    viewModel: SharedUserViewModel = koinViewModel(),
+    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> }
+) {
     val colorScheme = MaterialTheme.colorScheme
+    val isLoggedIn = LocalIsLogin.current
+    val requireAuth = LocalRequireAuth.current
+    
+    val uiState by viewModel.uiState.collectAsState()
 
-    val filters = listOf("Playlists", "Podcasts", "Albums", "Artists", "Downloaded")
-    val recentItems = listOf(
-        "Liked Songs" to "Playlist • 120 songs",
-        "Daily Mix 1" to "Made for you",
-        "Your Top Songs 2023" to "Playlist",
-        "Discover Weekly" to "New music updated every Monday",
-        "Rain Sounds" to "Podcast • Sleep",
-        "Jazz Vibes" to "Playlist",
-        "Lofi Hip Hop" to "Playlist",
-        "Rock Classics" to "Playlist"
-    )
+    val sharedScope = LocalSharedTransitionScope.current ?: return
+    val animatedScope = LocalNavAnimatedContentScope.current
+
+    val playlists by viewModel.playlistsFlow.collectAsState()
+    val currentUid by viewModel.currentUid.collectAsState()
+
+    val createdPlaylists = remember(playlists, currentUid) {
+        playlists.filter { it.creator?.userId == currentUid }
+    }
+    val subscribedPlaylists = remember(playlists, currentUid) {
+        playlists.filter { it.creator?.userId != currentUid }
+    }
+
+    // LaunchedEffect removed because data fetch is now handled globally in MainActivity
+
+    val tabs = listOf("我的音乐", "收藏歌单")
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         Modifier
             .fillMaxSize()
             .background(colorScheme.background)
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(top = 20.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Header
-            item {
-                Spacer(Modifier.statusBarsPadding())
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(40.dp),
-                        tint = colorScheme.onBackground
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    Text(
-                        text = "Your Library",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorScheme.onBackground
-                    )
+        if (!isLoggedIn) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "登录后查看您的音乐库",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+                Button(onClick = { requireAuth() }) {
+                    Text("立即登录")
                 }
             }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Spacer(Modifier.statusBarsPadding())
+                
+                Text(
+                    text = "音乐库",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                )
 
-            // Filters
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(bottom = 24.dp)
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    containerColor = colorScheme.background,
+                    contentColor = colorScheme.onBackground,
+                    divider = { },
+                    indicator = { tabPositions ->
+                        if (pagerState.currentPage < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                                color = colorScheme.primary
+                            )
+                        }
+                    }
                 ) {
-                    items(filters.size) { index ->
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = colorScheme.surfaceVariant,
-                            modifier = Modifier.height(36.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            text = { 
                                 Text(
-                                    text = filters[index],
-                                    color = colorScheme.onSurfaceVariant,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
+                                    text = title, 
+                                    fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Medium
+                                ) 
+                            }
+                        )
+                    }
+                }
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.weight(1f)
+                ) { page ->
+                    val displayList = if (page == 0) createdPlaylists else subscribedPlaylists
+                    
+                    if (displayList.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(color = colorScheme.primary)
+                            } else {
+                                Text(
+                                    text = "暂无歌单",
+                                    color = colorScheme.onBackground.copy(alpha = 0.5f)
                                 )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            contentPadding = PaddingValues(top = 16.dp, bottom = LocalBottomBarPadding.current),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(
+                                items = displayList,
+                                key = { "playlist_${it.id}" },
+                                contentType = { "playlist" }
+                            ) { playlist ->
+                                Row(
+                                    modifier = Modifier
+                                        .animateItem()
+                                        .fillMaxWidth()
+                                        .bouncyClickable { onPlaylistClick(playlist.id, playlist.coverImgUrl) }
+                                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    with(sharedScope) {
+                                        AsyncImage(
+                                            model = playlist.coverImgUrl,
+                                            contentDescription = "Playlist Cover",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(64.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(colorScheme.surfaceVariant)
+                                                .sharedBounds(
+                                                    sharedContentState = rememberSharedContentState(key = "playlist_cover_${playlist.id}"),
+                                                    animatedVisibilityScope = animatedScope,
+                                                    clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(12.dp))
+                                                )
+                                        )
+                                    }
+                                    Spacer(Modifier.width(16.dp))
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = playlist.name,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colorScheme.onBackground,
+                                            maxLines = 1
+                                        )
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(
+                                            text = "${playlist.trackCount} 首",
+                                            fontSize = 14.sp,
+                                            color = colorScheme.onBackground.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-
-            // List
-            items(recentItems.size) { index ->
-                val (title, subtitle) = recentItems[index]
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Placeholder Image
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(if (index == 0 || index == 4) CircleShape else RoundedCornerShape(8.dp))
-                            .background(colorScheme.primary.copy(alpha = 0.2f))
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = title,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colorScheme.onBackground
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = subtitle,
-                            fontSize = 14.sp,
-                            color = colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-            }
-
-            // Bottom Padding
-            item {
-                Spacer(Modifier.height(LocalBottomBarPadding.current))
             }
         }
     }

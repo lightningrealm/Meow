@@ -5,6 +5,8 @@ import com.lr.core.network.model.UserAccountResponse
 import com.lr.core.network.model.UserDetailResponse
 import com.lr.core.network.model.UserLevelResponse
 import com.lr.core.network.model.UserSubcountResponse
+import com.lr.core.network.model.RecentSongResponse
+import com.lr.core.network.model.RecentPlaylistResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -45,4 +47,16 @@ interface MeowUserService {
         @Query("limit") limit: Int = 30,
         @Query("offset") offset: Int = 0
     ): PlaylistResponse
+
+    @GET("/record/recent/song")
+    suspend fun getRecentSongs(
+        @Query("limit") limit: Int = 100,
+        @Query("offset") offset: Int = 0
+    ): RecentSongResponse
+
+    @GET("/record/recent/playlist")
+    suspend fun getRecentPlaylists(
+        @Query("limit") limit: Int = 100,
+        @Query("offset") offset: Int = 0
+    ): RecentPlaylistResponse
 }

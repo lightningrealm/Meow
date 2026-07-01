@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -24,8 +25,9 @@ dependencies {
     implementation(project(":core-datastore"))
     
     // Retrofit & OkHttp
-    implementation(libs.retrofit)
-    implementation(libs.converter.gson)
+    api(libs.retrofit)
+    implementation(libs.converter.kotlinx.serialization)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.logging.interceptor)
     implementation(libs.koin.core)
     implementation(libs.koin.android)

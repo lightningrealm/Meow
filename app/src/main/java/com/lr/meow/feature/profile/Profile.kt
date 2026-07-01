@@ -44,36 +44,41 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
 import com.lr.meow.ui.theme.LocalBottomBarPadding
+import com.lr.meow.ui.components.bouncyClickable
 import org.koin.androidx.compose.koinViewModel
+import com.lr.meow.ui.theme.LocalSharedTransitionScope
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
 
 @Composable
-fun Profile(viewModel: ProfileViewModel = koinViewModel()) {
+fun Profile(
+    viewModel: SharedUserViewModel = koinViewModel(),
+    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> }
+) {
     val colorScheme = MaterialTheme.colorScheme
     val isLoggedIn = LocalIsLogin.current
     val requireAuth = LocalRequireAuth.current
     val uiState by viewModel.uiState.collectAsState()
-    val playlists by viewModel.playlistsFlow.collectAsState()
-    val currentUid by viewModel.currentUid.collectAsState()
 
-    val createdPlaylists = remember(playlists, currentUid) {
-        playlists.filter { it.creator?.userId == currentUid }
-    }
-    val subscribedPlaylists = remember(playlists, currentUid) {
-        playlists.filter { it.creator?.userId != currentUid }
-    }
+    val recentSongs = viewModel.recentSongsPagingFlow.collectAsLazyPagingItems()
+    val recentPlaylists = viewModel.recentPlaylistsPagingFlow.collectAsLazyPagingItems()
 
-    var isCreatedExpanded by remember { mutableStateOf(true) }
-    var isSubscribedExpanded by remember { mutableStateOf(true) }
+    val sharedScope = LocalSharedTransitionScope.current ?: return
+    val animatedScope = LocalNavAnimatedContentScope.current
 
-    LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
-            viewModel.dispatch(ProfileIntent.RefreshProfile)
-        }
-    }
+    var isSongsExpanded by remember { mutableStateOf(true) }
+    var isPlaylistsExpanded by remember { mutableStateOf(true) }
 
     Box(
         Modifier
@@ -234,154 +239,156 @@ fun Profile(viewModel: ProfileViewModel = koinViewModel()) {
                     Spacer(Modifier.height(32.dp))
                 }
                 
-                // Playlists Title
-                if (playlists.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "Playlists",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colorScheme.onBackground,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
-                        )
-                    }
-                }
+                // Playlists section moved to Library Tab
 
-                // Created Playlists
-                if (createdPlaylists.isNotEmpty()) {
-                    item(key = "header_created", contentType = "header") {
+                // Recent Songs Section
+                if (recentSongs.itemCount > 0) {
+                    item {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { isCreatedExpanded = !isCreatedExpanded }
+                                .clickable { isSongsExpanded = !isSongsExpanded }
                                 .padding(horizontal = 20.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "我的歌单",
+                                text = "最近播放 - 歌曲",
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = colorScheme.onBackground
                             )
                             Icon(
-                                imageVector = if (isCreatedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                imageVector = if (isSongsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                 contentDescription = "Expand/Collapse",
-                                tint = colorScheme.onBackground.copy(alpha = 0.6f)
+                                tint = colorScheme.onBackground
                             )
                         }
                     }
-                }
-                if (isCreatedExpanded) {
-                    items(
-                        items = createdPlaylists,
-                        key = { "playlist_${it.id}" },
-                        contentType = { "playlist" }
-                    ) { playlist ->
-                        Row(
-                            modifier = Modifier
-                                .animateItem()
-                                .fillMaxWidth()
-                                .clickable { /*TODO*/ }
-                                .padding(horizontal = 20.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    item {
+                        AnimatedVisibility(
+                            visible = isSongsExpanded,
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
                         ) {
-                            AsyncImage(
-                                model = playlist.coverImgUrl,
-                                contentDescription = "Playlist Cover",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(colorScheme.surfaceVariant)
-                            )
-                            Spacer(Modifier.width(16.dp))
-                            Column(
-                                modifier = Modifier.weight(1f)
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.padding(bottom = 12.dp)
                             ) {
-                                Text(
-                                    text = playlist.name,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colorScheme.onBackground,
-                                    maxLines = 1
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = "${playlist.trackCount} tracks",
-                                    fontSize = 14.sp,
-                                    color = colorScheme.onBackground.copy(alpha = 0.6f)
-                                )
+                                items(count = recentSongs.itemCount) { index ->
+                                    recentSongs[index]?.let { recentItem ->
+                                        val song = recentItem.song
+                                        Column(
+                                            modifier = Modifier
+                                                .width(100.dp)
+                                                .bouncyClickable { /* TODO: Play song */ }
+                                        ) {
+                                            AsyncImage(
+                                                model = song.al?.picUrl,
+                                                contentDescription = "Song Cover",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .size(100.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(colorScheme.surfaceVariant)
+                                            )
+                                            Spacer(Modifier.height(8.dp))
+                                            Text(
+                                                text = song.name,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = colorScheme.onBackground,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(
+                                                text = song.artistName,
+                                                fontSize = 12.sp,
+                                                color = colorScheme.onBackground.copy(alpha = 0.6f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                // Subscribed Playlists
-                if (subscribedPlaylists.isNotEmpty()) {
-                    item(key = "header_subscribed", contentType = "header") {
+                // Recent Playlists Section
+                if (recentPlaylists.itemCount > 0) {
+                    item {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { isSubscribedExpanded = !isSubscribedExpanded }
+                                .clickable { isPlaylistsExpanded = !isPlaylistsExpanded }
                                 .padding(horizontal = 20.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "收藏的歌单",
+                                text = "最近播放 - 歌单",
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = colorScheme.onBackground
                             )
                             Icon(
-                                imageVector = if (isSubscribedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                imageVector = if (isPlaylistsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                 contentDescription = "Expand/Collapse",
-                                tint = colorScheme.onBackground.copy(alpha = 0.6f)
+                                tint = colorScheme.onBackground
                             )
                         }
                     }
-                }
-                if (isSubscribedExpanded) {
-                    items(
-                        items = subscribedPlaylists,
-                        key = { "playlist_${it.id}" },
-                        contentType = { "playlist" }
-                    ) { playlist ->
-                        Row(
-                            modifier = Modifier
-                                .animateItem()
-                                .fillMaxWidth()
-                                .clickable { /*TODO*/ }
-                                .padding(horizontal = 20.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    item {
+                        AnimatedVisibility(
+                            visible = isPlaylistsExpanded,
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
                         ) {
-                            AsyncImage(
-                                model = playlist.coverImgUrl,
-                                contentDescription = "Playlist Cover",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(colorScheme.surfaceVariant)
-                            )
-                            Spacer(Modifier.width(16.dp))
-                            Column(
-                                modifier = Modifier.weight(1f)
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.padding(bottom = 12.dp)
                             ) {
-                                Text(
-                                    text = playlist.name,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colorScheme.onBackground,
-                                    maxLines = 1
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = "${playlist.trackCount} tracks",
-                                    fontSize = 14.sp,
-                                    color = colorScheme.onBackground.copy(alpha = 0.6f)
-                                )
+                                items(count = recentPlaylists.itemCount) { index ->
+                                    recentPlaylists[index]?.let { recentItem ->
+                                        val playlist = recentItem.playlist
+                                        Column(
+                                            modifier = Modifier
+                                                .width(120.dp)
+                                                .bouncyClickable { onPlaylistClick(playlist.id, playlist.coverImgUrl) }
+                                        ) {
+                                            with(sharedScope) {
+                                                AsyncImage(
+                                                    model = playlist.coverImgUrl,
+                                                    contentDescription = "Playlist Cover",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(120.dp)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                        .background(colorScheme.surfaceVariant)
+                                                        .sharedBounds(
+                                                            sharedContentState = rememberSharedContentState(key = "playlist_cover_${playlist.id}"),
+                                                            animatedVisibilityScope = animatedScope,
+                                                            clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(12.dp))
+                                                        )
+                                                )
+                                            }
+                                            Spacer(Modifier.height(8.dp))
+                                            Text(
+                                                text = playlist.name,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = colorScheme.onBackground,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

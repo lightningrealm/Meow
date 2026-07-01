@@ -4,10 +4,18 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import com.lr.meow.feature.login.LoginViewModel
 import com.lr.meow.MainViewModel
-import com.lr.meow.feature.profile.ProfileViewModel
+import com.lr.meow.feature.profile.SharedUserViewModel
+import com.lr.meow.feature.playlist.PlaylistDetailViewModel
+import com.lr.meow.feature.discover.DiscoverViewModel
+import com.lr.meow.feature.home.HomeViewModel
+import com.lr.meow.feature.search.SearchViewModel
 
 val appModule = module {
     viewModel { LoginViewModel(authService = get()) }
     viewModel { MainViewModel(cookieStorage = get()) }
-    viewModel { ProfileViewModel(userService = get(), cookieStorage = get(), profileStorage = get()) }
+    viewModel { SharedUserViewModel(userService = get(), authService = get(), cookieStorage = get(), profileStorage = get()) }
+    viewModel { PlaylistDetailViewModel(playlistService = get()) }
+    viewModel { DiscoverViewModel(recommendService = get()) }
+    viewModel { HomeViewModel(recommendService = get()) }
+    viewModel { SearchViewModel(searchService = get(), searchHistoryStorage = get()) }
 }

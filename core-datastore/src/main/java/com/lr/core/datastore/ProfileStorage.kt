@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 private val Context.profileDataStore by preferencesDataStore(name = "user_profile_prefs")
 
 data class CachedProfile(
+    val userId: Long? = null,
     val nickname: String? = null,
     val avatarUrl: String? = null,
     val backgroundUrl: String? = null,
@@ -24,6 +25,7 @@ data class CachedProfile(
 class ProfileStorage(private val context: Context) {
 
     companion object {
+        private val KEY_USER_ID = androidx.datastore.preferences.core.longPreferencesKey("userId")
         private val KEY_NICKNAME = stringPreferencesKey("nickname")
         private val KEY_AVATAR = stringPreferencesKey("avatarUrl")
         private val KEY_BACKGROUND = stringPreferencesKey("backgroundUrl")
@@ -37,6 +39,7 @@ class ProfileStorage(private val context: Context) {
 
     val profileFlow: Flow<CachedProfile> = context.profileDataStore.data.map { prefs ->
         CachedProfile(
+            userId = prefs[KEY_USER_ID],
             nickname = prefs[KEY_NICKNAME],
             avatarUrl = prefs[KEY_AVATAR],
             backgroundUrl = prefs[KEY_BACKGROUND],
@@ -54,6 +57,7 @@ class ProfileStorage(private val context: Context) {
 
     suspend fun saveProfile(profile: CachedProfile) {
         context.profileDataStore.edit { prefs ->
+            profile.userId?.let { prefs[KEY_USER_ID] = it }
             profile.nickname?.let { prefs[KEY_NICKNAME] = it }
             profile.avatarUrl?.let { prefs[KEY_AVATAR] = it }
             profile.backgroundUrl?.let { prefs[KEY_BACKGROUND] = it }

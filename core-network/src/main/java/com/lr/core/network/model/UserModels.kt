@@ -1,113 +1,165 @@
 package com.lr.core.network.model
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 基础用户配置/资料信息
  */
+@Serializable
 data class UserProfile(
-    @SerializedName("userId")
+    @SerialName("userId")
     val userId: Long,
-    @SerializedName("nickname")
-    val nickname: String?,
-    @SerializedName("avatarUrl")
-    val avatarUrl: String?,
-    @SerializedName("backgroundUrl")
-    val backgroundUrl: String?,
-    @SerializedName("signature")
-    val signature: String?,
-    @SerializedName("followeds")
-    val followeds: Int?, // 粉丝数
-    @SerializedName("follows")
-    val follows: Int?, // 关注数
-    @SerializedName("eventCount")
-    val eventCount: Int? // 动态数
+    @SerialName("nickname")
+    val nickname: String? = null,
+    @SerialName("avatarUrl")
+    val avatarUrl: String? = null,
+    @SerialName("backgroundUrl")
+    val backgroundUrl: String? = null,
+    @SerialName("signature")
+    val signature: String? = null,
+    @SerialName("followeds")
+    val followeds: Int? = null, // 粉丝数
+    @SerialName("follows")
+    val follows: Int? = null, // 关注数
+    @SerialName("eventCount")
+    val eventCount: Int? = null // 动态数
 )
 
 /**
  * /user/account 接口的响应
  */
+@Serializable
 data class UserAccountResponse(
-    @SerializedName("code")
+    @SerialName("code")
     val code: Int,
-    @SerializedName("profile")
-    val profile: UserProfile?,
-    @SerializedName("account")
-    val account: AccountInfo?
+    @SerialName("profile")
+    val profile: UserProfile? = null,
+    @SerialName("account")
+    val account: AccountInfo? = null
 ) {
+    @Serializable
     data class AccountInfo(
-        @SerializedName("id")
+        @SerialName("id")
         val id: Long,
-        @SerializedName("userName")
-        val userName: String?,
-        @SerializedName("createTime")
-        val createTime: Long?,
-        @SerializedName("status")
-        val status: Int?
+        @SerialName("userName")
+        val userName: String? = null,
+        @SerialName("createTime")
+        val createTime: Long? = null,
+        @SerialName("status")
+        val status: Int? = null
     )
 }
 
 /**
  * /user/detail 接口的响应
  */
+@Serializable
 data class UserDetailResponse(
-    @SerializedName("code")
+    @SerialName("code")
     val code: Int,
-    @SerializedName("level")
-    val level: Int?,
-    @SerializedName("listenSongs")
-    val listenSongs: Int?,
-    @SerializedName("profile")
-    val profile: UserProfile?,
-    @SerializedName("createDays")
-    val createDays: Int?
+    @SerialName("level")
+    val level: Int? = null,
+    @SerialName("listenSongs")
+    val listenSongs: Int? = null,
+    @SerialName("profile")
+    val profile: UserProfile? = null,
+    @SerialName("createDays")
+    val createDays: Int? = null
 )
 
 /**
  * /user/subcount 接口的响应
  */
+@Serializable
 data class UserSubcountResponse(
-    @SerializedName("code")
+    @SerialName("code")
     val code: Int,
-    @SerializedName("programCount")
-    val programCount: Int?,
-    @SerializedName("djRadioCount")
-    val djRadioCount: Int?,
-    @SerializedName("mvCount")
-    val mvCount: Int?,
-    @SerializedName("artistCount")
-    val artistCount: Int?,
-    @SerializedName("newProgramCount")
-    val newProgramCount: Int?,
-    @SerializedName("createDjRadioCount")
-    val createDjRadioCount: Int?,
-    @SerializedName("createdPlaylistCount")
-    val createdPlaylistCount: Int?,
-    @SerializedName("subPlaylistCount")
-    val subPlaylistCount: Int?
+    @SerialName("programCount")
+    val programCount: Int? = null,
+    @SerialName("djRadioCount")
+    val djRadioCount: Int? = null,
+    @SerialName("mvCount")
+    val mvCount: Int? = null,
+    @SerialName("artistCount")
+    val artistCount: Int? = null,
+    @SerialName("newProgramCount")
+    val newProgramCount: Int? = null,
+    @SerialName("createDjRadioCount")
+    val createDjRadioCount: Int? = null,
+    @SerialName("createdPlaylistCount")
+    val createdPlaylistCount: Int? = null,
+    @SerialName("subPlaylistCount")
+    val subPlaylistCount: Int? = null
 )
 
 /**
  * /user/level 接口的响应
  */
+@Serializable
 data class UserLevelResponse(
-    @SerializedName("code")
+    @SerialName("code")
     val code: Int,
-    @SerializedName("data")
-    val data: LevelData?
+    @SerialName("data")
+    val data: LevelData? = null
 ) {
+    @Serializable
     data class LevelData(
-        @SerializedName("level")
+        @SerialName("level")
         val level: Int,
-        @SerializedName("progress")
+        @SerialName("progress")
         val progress: Double,
-        @SerializedName("nextPlayCount")
+        @SerialName("nextPlayCount")
         val nextPlayCount: Int,
-        @SerializedName("nextLoginCount")
+        @SerialName("nextLoginCount")
         val nextLoginCount: Int,
-        @SerializedName("nowPlayCount")
+        @SerialName("nowPlayCount")
         val nowPlayCount: Int,
-        @SerializedName("nowLoginCount")
+        @SerialName("nowLoginCount")
         val nowLoginCount: Int
     )
 }
+
+@Serializable
+data class RecentSongResponse(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("data")
+    val data: RecentSongData? = null
+)
+
+@Serializable
+data class RecentSongData(
+    @SerialName("list")
+    val list: List<RecentSongItem>? = null
+)
+
+@Serializable
+data class RecentSongItem(
+    @SerialName("playTime")
+    val playTime: Long,
+    @SerialName("data")
+    val song: RecommendSong
+)
+
+@Serializable
+data class RecentPlaylistResponse(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("data")
+    val data: RecentPlaylistData? = null
+)
+
+@Serializable
+data class RecentPlaylistData(
+    @SerialName("list")
+    val list: List<RecentPlaylistItem>? = null
+)
+
+@Serializable
+data class RecentPlaylistItem(
+    @SerialName("playTime")
+    val playTime: Long,
+    @SerialName("data")
+    val playlist: Playlist
+)

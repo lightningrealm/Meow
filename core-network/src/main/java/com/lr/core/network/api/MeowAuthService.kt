@@ -44,6 +44,12 @@ interface MeowAuthService {
     suspend fun refreshLogin(): BaseResponse<Any>
     
     /**
+     * 获取登录状态
+     */
+    @GET("login/status")
+    suspend fun checkLoginStatus(): com.lr.core.network.model.LoginStatusResponse
+    
+    /**
      * 游客登录
      */
     @GET("register/anonimous")

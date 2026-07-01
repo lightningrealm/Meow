@@ -41,6 +41,11 @@ data class EntrySearchDetail(
 ): NavKey
 
 /**
- * ##PRofileGraph对应的Destination
+ * ##ProfileGraph对应的Destination
  * **/
 @Serializable data object EntryProfileRoot: NavKey
+
+/**
+ * ## Playlist Detail (can be pushed to any stack)
+ * **/
+@Serializable data class EntryPlaylistDetail(val id: Long, val coverImgUrl: String? = null): NavKey

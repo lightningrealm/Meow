@@ -60,6 +60,17 @@ class LoginViewModel(
                 } else {
                     _uiState.update { it.copy(errorMessage = response.message ?: "发送验证码失败") }
                 }
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                var displayMsg = "发送验证码失败"
+                if (!errorBody.isNullOrBlank()) {
+                    try {
+                        val json = org.json.JSONObject(errorBody)
+                        if (json.has("message")) displayMsg = json.getString("message")
+                        else if (json.has("msg")) displayMsg = json.getString("msg")
+                    } catch (ignored: Exception) {}
+                }
+                _uiState.update { it.copy(errorMessage = displayMsg) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = e.message ?: "网络异常") }
             } finally {
@@ -97,6 +108,17 @@ class LoginViewModel(
                 } else {
                     _uiState.update { it.copy(errorMessage = "登录失败: Code ${response.code}") }
                 }
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                var displayMsg = "登录失败"
+                if (!errorBody.isNullOrBlank()) {
+                    try {
+                        val json = org.json.JSONObject(errorBody)
+                        if (json.has("message")) displayMsg = json.getString("message")
+                        else if (json.has("msg")) displayMsg = json.getString("msg")
+                    } catch (ignored: Exception) {}
+                }
+                _uiState.update { it.copy(errorMessage = displayMsg) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = e.message ?: "网络异常") }
             } finally {

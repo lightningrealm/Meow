@@ -71,28 +71,16 @@ fun Home(
             }
             val mockCards = listOf(
                 CardFaceData(
-                    topTitle = "NEW RELEASE",
-                    title = "The Weekend Mix",
-                    subTitle = "Catch up on the latest tracks tailored for your weekend.",
+                    topTitle = "DAILY RECOMMEND",
+                    title = "每日推荐歌曲",
+                    subTitle = "根据你的音乐口味生成，每天6:00更新",
                     backgroundGradient = listOf(Color(0xFFFF512F), Color(0xFFDD2476))
                 ),
                 CardFaceData(
-                    topTitle = "EDITOR'S PICK",
-                    title = "Lo-Fi Beats",
-                    subTitle = "Relax and focus with these chilled out tunes.",
+                    topTitle = "PERSONAL FM",
+                    title = "私人 FM",
+                    subTitle = "最懂你的音乐电台，随时随地",
                     backgroundGradient = listOf(Color(0xFF1CB5E0), Color(0xFF000851))
-                ),
-                CardFaceData(
-                    topTitle = "TOP 50 GLOBAL",
-                    title = "Chart Toppers",
-                    subTitle = "The most played songs around the world right now.",
-                    backgroundGradient = listOf(Color(0xFF8E2DE2), Color(0xFF4A00E0))
-                ),
-                CardFaceData(
-                    topTitle = "NEW EPISODE",
-                    title = "Tech Talks",
-                    subTitle = "Deep dive into the future of artificial intelligence.",
-                    backgroundGradient = listOf(Color(0xFF00B4DB), Color(0xFF0083B0))
                 )
             )
 
