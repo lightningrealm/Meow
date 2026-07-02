@@ -298,7 +298,7 @@ fun Profile(
                                             )
                                             Spacer(Modifier.height(8.dp))
                                             Text(
-                                                text = song.name,
+                                                text = song.name ?: "未知歌曲",
                                                 fontSize = 14.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = colorScheme.onBackground,

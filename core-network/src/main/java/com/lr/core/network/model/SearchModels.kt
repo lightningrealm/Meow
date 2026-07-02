@@ -64,7 +64,7 @@ data class SearchSong(
     @SerialName("dt") val duration: Long? = null
 ) {
     val artistName: String
-        get() = ar?.joinToString("/") { it.name } ?: "未知歌手"
+        get() = ar?.joinToString("/") { it.name ?: "未知歌手" } ?: "未知歌手"
 }
 
 @Serializable

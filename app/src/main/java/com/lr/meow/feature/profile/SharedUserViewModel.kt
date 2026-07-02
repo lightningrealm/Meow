@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import androidx.paging.Pager
@@ -74,23 +75,37 @@ class SharedUserViewModel(
         initialValue = SharedUserUiState()
     )
 
-    val recentSongsPagingFlow = Pager(
-        config = PagingConfig(pageSize = 30),
-        pagingSourceFactory = { RecentSongPagingSource(userService) }
-    ).flow.cachedIn(viewModelScope)
-
-    val recentPlaylistsPagingFlow = Pager(
-        config = PagingConfig(pageSize = 30),
-        pagingSourceFactory = { RecentPlaylistPagingSource(userService) }
-    ).flow.cachedIn(viewModelScope)
-
-    private val gson = Gson()
-    
     val currentUid: StateFlow<Long?> = profileStorage.profileFlow.map { it.userId }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val recentSongsPagingFlow = currentUid.flatMapLatest { uid ->
+        if (uid == null) {
+            kotlinx.coroutines.flow.flowOf(androidx.paging.PagingData.empty())
+        } else {
+            Pager(
+                config = PagingConfig(pageSize = 30),
+                pagingSourceFactory = { RecentSongPagingSource(userService) }
+            ).flow
+        }
+    }.cachedIn(viewModelScope)
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val recentPlaylistsPagingFlow = currentUid.flatMapLatest { uid ->
+        if (uid == null) {
+            kotlinx.coroutines.flow.flowOf(androidx.paging.PagingData.empty())
+        } else {
+            Pager(
+                config = PagingConfig(pageSize = 30),
+                pagingSourceFactory = { RecentPlaylistPagingSource(userService) }
+            ).flow
+        }
+    }.cachedIn(viewModelScope)
+
+    private val gson = Gson()
 
     val playlistsFlow: StateFlow<List<Playlist>> = profileStorage.playlistsJsonFlow.map { json ->
         if (json != null) {

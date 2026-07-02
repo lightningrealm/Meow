@@ -240,7 +240,7 @@ fun Discover(
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
-                                            text = toplist.name,
+                                            text = toplist.name ?: "未知榜单",
                                             color = colorScheme.onBackground,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,
@@ -287,7 +287,7 @@ fun Discover(
                                         )
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
-                                            text = album.name,
+                                            text = album.name ?: "未知专辑",
                                             color = colorScheme.onBackground,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,
@@ -296,7 +296,7 @@ fun Discover(
                                         )
                                         album.artist?.let { artist ->
                                             Text(
-                                                text = artist.name,
+                                                text = artist.name ?: "未知歌手",
                                                 color = colorScheme.onSurfaceVariant,
                                                 fontSize = 12.sp,
                                                 maxLines = 1,
@@ -343,7 +343,7 @@ fun Discover(
                                         )
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
-                                            text = artist.name,
+                                            text = artist.name ?: "未知歌手",
                                             color = colorScheme.onBackground,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,

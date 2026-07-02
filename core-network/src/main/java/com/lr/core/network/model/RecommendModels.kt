@@ -67,7 +67,7 @@ data class RecommendSong(
     @SerialName("id")
     val id: Long,
     @SerialName("name")
-    val name: String,
+    val name: String? = null,
     @SerialName("ar")
     @JsonNames("artists")
     val ar: List<Artist>? = null,
@@ -78,7 +78,7 @@ data class RecommendSong(
     val reason: String? = null
 ) {
     val artistName: String
-        get() = ar?.joinToString("/") { it.name } ?: "未知歌手"
+        get() = ar?.joinToString("/") { it.name ?: "未知歌手" } ?: "未知歌手"
 }
 
 @Serializable
@@ -86,7 +86,7 @@ data class Artist(
     @SerialName("id")
     val id: Long,
     @SerialName("name")
-    val name: String,
+    val name: String? = null,
     @SerialName("picUrl")
     val picUrl: String? = null
 )
@@ -96,7 +96,7 @@ data class Album(
     @SerialName("id")
     val id: Long,
     @SerialName("name")
-    val name: String,
+    val name: String? = null,
     @SerialName("picUrl")
     val picUrl: String? = null,
     @SerialName("artist")

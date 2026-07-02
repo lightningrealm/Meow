@@ -306,7 +306,7 @@ private fun DailyRecommendContent(
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = song.name,
+                            text = song.name ?: "未知歌曲",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = colorScheme.onBackground,
@@ -555,7 +555,7 @@ private fun PersonalFmContent(
                                     .padding(24.dp)
                             ) {
                                 Text(
-                                    text = song.name,
+                                    text = song.name ?: "未知歌曲",
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,

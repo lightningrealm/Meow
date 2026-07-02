@@ -147,7 +147,7 @@ fun PlaylistDetail(
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = song.name,
+                                text = song.name ?: "未知歌曲",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = colorScheme.onBackground,
