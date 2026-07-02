@@ -77,6 +77,7 @@ dependencies {
     implementation(project(":core-network"))
     implementation(project(":core-datastore"))
     implementation(project(":core-database"))
+    implementation(project(":core-animation"))
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

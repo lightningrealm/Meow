@@ -1,7 +1,7 @@
 package com.lr.meow.feature.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -11,7 +11,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,12 +33,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
@@ -43,8 +64,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil3.compose.AsyncImage
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
 import com.lr.meow.ui.common.card.SwipeDirection
@@ -52,16 +73,17 @@ import com.lr.meow.ui.common.card.SwipeableTinderCard
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.components.shimmerEffect
 import com.lr.meow.ui.theme.LocalBottomBarPadding
-import com.lr.meow.ui.theme.LocalSharedTransitionScope
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeDetail(
     id: Int,
-    viewModel: HomeViewModel = koinViewModel()
+    viewModel: HomeViewModel = koinViewModel(),
+    onBack: () -> Unit = {}
 ) {
-    val sharedScope = LocalSharedTransitionScope.current ?: return
-    val animatedScope = LocalNavAnimatedContentScope.current
+    val cardAnimState = LocalCardAnimState.current
+    val coroutineScope = rememberCoroutineScope()
     val colorScheme = MaterialTheme.colorScheme
     
     val uiState by viewModel.uiState.collectAsState()
@@ -77,18 +99,20 @@ fun HomeDetail(
         }
     }
 
-    with(sharedScope) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .sharedBounds(
-                    sharedContentState = rememberSharedContentState("card_hero_$id"),
-                    animatedVisibilityScope = animatedScope,
-                    clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(0.dp))
-                )
-        ) {
-            // Background Layer
-            if (id == 0) {
+    BackHandler {
+        // 1. 同步刷新 bounds + 设 phase=COLLAPSING，overlay 立即变不透明覆盖住页面切换
+        cardAnimState.prepareCollapse()
+        // 2. 导航切回 Home（instant，因为 popTransitionSpec 检测到 EntryHomeDetail）
+        onBack()
+        // 3. 协程跑弹簧收起动画
+        coroutineScope.launch { cardAnimState.runCollapse() }
+    }
+
+    Box(
+        Modifier.fillMaxSize()
+    ) {
+        // Background Layer
+        if (id == 0) {
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(
@@ -170,7 +194,6 @@ fun HomeDetail(
             }
         }
     }
-}
 
 @Composable
 private fun DailyRecommendContent(

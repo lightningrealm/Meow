@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken
 import com.lr.core.datastore.CachedProfile
 import com.lr.core.datastore.CookieStorage
 import com.lr.core.datastore.ProfileStorage
+import com.lr.core.network.PersistentCookieJar
 import com.lr.core.network.api.MeowAuthService
 import com.lr.core.network.api.MeowUserService
 import com.lr.core.network.model.Playlist
@@ -30,7 +31,7 @@ import androidx.paging.cachedIn
 class SharedUserViewModel(
     private val userService: MeowUserService,
     private val authService: MeowAuthService,
-    private val cookieStorage: CookieStorage,
+    private val persistentCookieJar: PersistentCookieJar,
     private val profileStorage: ProfileStorage
 ) : ViewModel() {
 
@@ -190,8 +191,8 @@ class SharedUserViewModel(
     
     fun logout() {
         viewModelScope.launch {
-            cookieStorage.clearCookies("112.124.4.51")
-            cookieStorage.clearCookies("music.163.com")
+            persistentCookieJar.clearCookies("112.124.4.51")
+            persistentCookieJar.clearCookies("music.163.com")
             profileStorage.clearProfile()
         }
     }

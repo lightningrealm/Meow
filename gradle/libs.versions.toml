@@ -1,8 +1,10 @@
 [versions]
 agp = "9.2.1"
+animationCore = "1.11.4"
 coilCompose = "3.5.0"
 converterKotlinxSerialization = "3.0.0"
 coreKtx = "1.10.1"
+foundation = "1.11.4"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -29,12 +31,17 @@ datastorePreferences = "1.1.1"
 coroutines = "1.8.0"
 tinkAndroid = "1.22.0"
 pagingCompose = "3.3.2"
+ui = "1.11.3"
 
 [libraries]
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
+androidx-compose-animation-core = { module = "androidx.compose.animation:animation-core", version.ref = "animationCore" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "materialIconsCore" }
+androidx-compose-ui-util = { module = "androidx.compose.ui:ui-util", version.ref = "ui" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinCore" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinCore" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinCore" }

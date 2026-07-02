@@ -13,7 +13,7 @@ import com.lr.meow.feature.search.SearchViewModel
 val appModule = module {
     viewModel { LoginViewModel(authService = get()) }
     viewModel { MainViewModel(cookieStorage = get()) }
-    viewModel { SharedUserViewModel(userService = get(), authService = get(), cookieStorage = get(), profileStorage = get()) }
+    viewModel { SharedUserViewModel(userService = get(), authService = get(), persistentCookieJar = get(), profileStorage = get()) }
     viewModel { PlaylistDetailViewModel(playlistService = get()) }
     viewModel { DiscoverViewModel(recommendService = get()) }
     viewModel { HomeViewModel(recommendService = get()) }

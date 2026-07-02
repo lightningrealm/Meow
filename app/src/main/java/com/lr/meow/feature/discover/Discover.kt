@@ -1,16 +1,21 @@
 package com.lr.meow.feature.discover
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,22 +25,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.lr.animation.diysharedelement.model.CardAnimTransform
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
-import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.components.shimmerEffect
-import com.lr.meow.ui.theme.LocalSharedTransitionScope
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.AnimatedVisibilityScope
+import com.lr.meow.ui.theme.LocalBottomBarPadding
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -48,8 +50,14 @@ fun Discover(
     val requireAuth = LocalRequireAuth.current
     val uiState by viewModel.uiState.collectAsState()
 
-    val sharedScope = LocalSharedTransitionScope.current ?: return
-    val animatedScope = LocalNavAnimatedContentScope.current
+    val cardAnimState = com.lr.animation.diysharedelement.component.LocalCardAnimState.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val targetSizePx = with(density) { 120.dp.toPx() }
+    val targetXPx = with(density) { 20.dp.toPx() }
+    val targetYPx = with(density) { 140.dp.toPx() }
+    val targetRadiusPx = with(density) { 16.dp.toPx() }
 
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn && uiState.recommendPlaylists.isEmpty() && !uiState.isError) {
@@ -131,23 +139,36 @@ fun Discover(
                                     Column(
                                         modifier = Modifier
                                             .width(140.dp)
-                                            .bouncyClickable { onPlaylistClick(playlist.id, playlist.picUrl) }
+                                            .bouncyClickable { 
+                                                val ready = cardAnimState.prepareExpand("playlist_cover_${playlist.id}") { _ ->
+                                                    CardAnimTransform(
+                                                        x = targetXPx,
+                                                        y = targetYPx,
+                                                        width = targetSizePx,
+                                                        height = targetSizePx,
+                                                        cornerRadius = targetRadiusPx
+                                                    )
+                                                }
+                                                if (ready) {
+                                                    onPlaylistClick(playlist.id, playlist.picUrl)
+                                                    cardAnimState.animScope.launch { cardAnimState.runExpand() }
+                                                }
+                                            }
                                     ) {
-                                        with(sharedScope) {
+                                        com.lr.animation.diysharedelement.modifier.SharedElement(
+                                            cardId = "playlist_cover_${playlist.id}",
+                                            modifier = Modifier
+                                                .width(140.dp)
+                                                .height(140.dp)
+                                        ) {
                                             AsyncImage(
                                                 model = playlist.picUrl,
                                                 contentDescription = playlist.name,
                                                 contentScale = ContentScale.Crop,
                                                 modifier = Modifier
-                                                    .width(140.dp)
-                                                    .height(140.dp)
+                                                    .fillMaxSize()
                                                     .clip(RoundedCornerShape(16.dp))
                                                     .background(colorScheme.surfaceVariant)
-                                                    .sharedBounds(
-                                                        sharedContentState = rememberSharedContentState(key = "playlist_cover_${playlist.id}"),
-                                                        animatedVisibilityScope = animatedScope,
-                                                        clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
-                                                    )
                                             )
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
@@ -185,20 +206,34 @@ fun Discover(
                                     Column(
                                         modifier = Modifier
                                             .width(140.dp)
-                                            .bouncyClickable { onPlaylistClick(toplist.id, toplist.coverImgUrl) }
+                                            .bouncyClickable { 
+                                                val ready = cardAnimState.prepareExpand("playlist_cover_${toplist.id}") { _ ->
+                                                    CardAnimTransform(
+                                                        x = targetXPx,
+                                                        y = targetYPx,
+                                                        width = targetSizePx,
+                                                        height = targetSizePx,
+                                                        cornerRadius = targetRadiusPx
+                                                    )
+                                                }
+                                                if (ready) {
+                                                    onPlaylistClick(toplist.id, toplist.coverImgUrl)
+                                                    cardAnimState.animScope.launch { cardAnimState.runExpand() }
+                                                }
+                                            }
                                     ) {
-                                        with(sharedScope) {
+                                        com.lr.animation.diysharedelement.modifier.SharedElement(
+                                            cardId = "playlist_cover_${toplist.id}",
+                                            modifier = Modifier
+                                                .width(140.dp)
+                                                .height(140.dp)
+                                        ) {
                                             AsyncImage(
                                                 model = toplist.coverImgUrl,
                                                 contentDescription = toplist.name,
                                                 contentScale = ContentScale.Crop,
                                                 modifier = Modifier
-                                                    .sharedElement(
-                                                        sharedContentState = rememberSharedContentState(key = "playlist_cover_${toplist.id}"),
-                                                        animatedVisibilityScope = animatedScope
-                                                    )
-                                                    .width(140.dp)
-                                                    .height(140.dp)
+                                                    .fillMaxSize()
                                                     .clip(RoundedCornerShape(16.dp))
                                                     .background(colorScheme.surfaceVariant)
                                             )

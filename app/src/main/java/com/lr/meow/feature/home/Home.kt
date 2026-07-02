@@ -20,13 +20,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
+import com.lr.animation.diysharedelement.modifier.SharedElement
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import com.lr.animation.diysharedelement.model.CardAnimTransform
 import com.lr.meow.data.cardface.CardFaceData
 import com.lr.meow.ui.common.card.CardFace
 import com.lr.meow.ui.theme.LocalBottomBarPadding
@@ -36,6 +43,10 @@ fun Home(
     onNavigateToDetail:(Int)-> Unit
 ){
     val colorScheme = MaterialTheme.colorScheme
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
     Box(
         Modifier
             .fillMaxSize()
@@ -95,7 +106,11 @@ fun Home(
                     )
                 )
 
-                Box(
+                val cardAnimState = LocalCardAnimState.current
+                val coroutineScope = rememberCoroutineScope()
+
+                SharedElement(
+                    cardId = "card_hero_$index",
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
                         .fillMaxWidth()
@@ -103,10 +118,24 @@ fun Home(
                         .height(430.dp)
                 ) {
                     CardFace(
-                        cardFaceData = card,
-                        sharedKey = "card_hero_$index"
+                        cardFaceData = card
                     ) {
-                        onNavigateToDetail(index)
+                        // 1. 同步建立 session，phase 立即变为 EXPANDING
+                        val ready = cardAnimState.prepareExpand("card_hero_$index") { _ ->
+                            CardAnimTransform(
+                                x = 0f,
+                                y = 0f,
+                                width = screenWidthPx,
+                                height = screenHeightPx,
+                                cornerRadius = 0f
+                            )
+                        }
+                        if (ready) {
+                            // 2. 触发导航（此时 phase != IDLE，transitionSpec 走 instant）
+                            onNavigateToDetail(index)
+                            // 3. 协程里跑弹簧动画
+                            coroutineScope.launch { cardAnimState.runExpand() }
+                        }
                     }
                 }
                 Spacer(Modifier.height(30.dp))

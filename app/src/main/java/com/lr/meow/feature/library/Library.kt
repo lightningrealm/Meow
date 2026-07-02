@@ -52,6 +52,8 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.spring
+import com.lr.animation.diysharedelement.model.CardAnimTransform
+import kotlinx.coroutines.launch
 
 @Composable
 fun Library(
@@ -64,8 +66,12 @@ fun Library(
     
     val uiState by viewModel.uiState.collectAsState()
 
-    val sharedScope = LocalSharedTransitionScope.current ?: return
-    val animatedScope = LocalNavAnimatedContentScope.current
+    val cardAnimState = com.lr.animation.diysharedelement.component.LocalCardAnimState.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val targetSizePx = with(density) { 120.dp.toPx() }
+    val targetXPx = with(density) { 20.dp.toPx() }
+    val targetYPx = with(density) { 140.dp.toPx() }
+    val targetRadiusPx = with(density) { 16.dp.toPx() }
 
     val playlists by viewModel.playlistsFlow.collectAsState()
     val currentUid by viewModel.currentUid.collectAsState()
@@ -182,24 +188,37 @@ fun Library(
                                     modifier = Modifier
                                         .animateItem()
                                         .fillMaxWidth()
-                                        .bouncyClickable { onPlaylistClick(playlist.id, playlist.coverImgUrl) }
+                                        .bouncyClickable { 
+                                            val ready = cardAnimState.prepareExpand("playlist_cover_${playlist.id}") { _ ->
+                                                CardAnimTransform(
+                                                    x = targetXPx,
+                                                    y = targetYPx,
+                                                    width = targetSizePx,
+                                                    height = targetSizePx,
+                                                    cornerRadius = targetRadiusPx
+                                                )
+                                            }
+                                            if (ready) {
+                                                onPlaylistClick(playlist.id, playlist.coverImgUrl)
+                                                cardAnimState.animScope.launch { cardAnimState.runExpand() }
+                                            }
+                                        }
                                         .padding(horizontal = 20.dp, vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    with(sharedScope) {
+                                    com.lr.animation.diysharedelement.modifier.SharedElement(
+                                        cardId = "playlist_cover_${playlist.id}",
+                                        modifier = Modifier
+                                            .size(64.dp)
+                                    ) {
                                         AsyncImage(
                                             model = playlist.coverImgUrl,
                                             contentDescription = "Playlist Cover",
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier
-                                                .size(64.dp)
+                                                .fillMaxSize()
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .background(colorScheme.surfaceVariant)
-                                                .sharedBounds(
-                                                    sharedContentState = rememberSharedContentState(key = "playlist_cover_${playlist.id}"),
-                                                    animatedVisibilityScope = animatedScope,
-                                                    clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(12.dp))
-                                                )
                                         )
                                     }
                                     Spacer(Modifier.width(16.dp))

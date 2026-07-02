@@ -28,10 +28,9 @@ import coil3.request.crossfade
 import androidx.compose.ui.platform.LocalContext
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
-import com.lr.meow.ui.theme.LocalSharedTransitionScope
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.launch
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,13 +48,18 @@ fun PlaylistDetail(
         viewModel.handleIntent(PlaylistDetailIntent.LoadPlaylist(playlistId))
     }
 
-    val sharedScope = LocalSharedTransitionScope.current ?: return
-    val animatedScope = LocalNavAnimatedContentScope.current
+    val cardAnimState = LocalCardAnimState.current
+    val coroutineScope = rememberCoroutineScope()
 
-    with(sharedScope) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            val detail = uiState.playlistDetail
-            val songs = uiState.songs
+    BackHandler {
+        cardAnimState.prepareCollapse()
+        onBack()
+        cardAnimState.animScope.launch { cardAnimState.runCollapse() }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val detail = uiState.playlistDetail
+        val songs = uiState.songs
             val displayCover = detail?.coverImgUrl ?: coverImgUrl
             val listState = rememberLazyListState()
             val headerOffset by remember {
@@ -188,7 +192,11 @@ fun PlaylistDetail(
                 TopAppBar(
                     title = { Text("歌单", color = Color.White) },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = {
+                            cardAnimState.prepareCollapse()
+                            onBack()
+                            cardAnimState.animScope.launch { cardAnimState.runCollapse() }
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
@@ -223,11 +231,6 @@ fun PlaylistDetail(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .sharedBounds(
-                                sharedContentState = rememberSharedContentState(key = "playlist_cover_${playlistId}"),
-                                animatedVisibilityScope = animatedScope,
-                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
-                            )
                     )
                     Spacer(Modifier.width(16.dp))
                     Column {
@@ -260,4 +263,3 @@ fun PlaylistDetail(
             }
         }
     }
-}

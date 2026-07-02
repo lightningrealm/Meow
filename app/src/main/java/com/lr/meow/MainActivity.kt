@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -26,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,15 +37,18 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.lr.animation.diysharedelement.component.CardAnimRoot
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
+import com.lr.animation.diysharedelement.state.CardAnimState
 import com.lr.glassui.captureBackground
 import com.lr.meow.data.navigation.EntryDiscoverDetail
 import com.lr.meow.data.navigation.EntryDiscoverRoot
 import com.lr.meow.data.navigation.EntryHomeDetail
 import com.lr.meow.data.navigation.EntryHomeRoot
 import com.lr.meow.data.navigation.EntryLibraryRoot
+import com.lr.meow.data.navigation.EntryPlaylistDetail
 import com.lr.meow.data.navigation.EntryProfileRoot
 import com.lr.meow.data.navigation.EntrySearchRoot
-import com.lr.meow.data.navigation.EntryPlaylistDetail
 import com.lr.meow.data.navigation.MyNavTab
 import com.lr.meow.feature.discover.Discover
 import com.lr.meow.feature.discover.DiscoverDetail
@@ -53,13 +56,12 @@ import com.lr.meow.feature.home.Home
 import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
 import com.lr.meow.feature.login.Login
+import com.lr.meow.feature.playlist.PlaylistDetail
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.search.Search
-import com.lr.meow.feature.playlist.PlaylistDetail
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
-import com.lr.meow.ui.theme.LocalSharedTransitionScope
 import com.lr.meow.ui.theme.MeowTheme
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
@@ -128,31 +130,43 @@ fun RootView(
         }
     }
 
+    val sourceCornerRadiusPx = with(LocalDensity.current) { 20.dp.toPx() } // 与 CardFace 的 RoundedCornerShape(20.dp) 一致
+    val cardAnimScope = rememberCoroutineScope()
+    android.util.Log.d("SCOPE_TEST", "MainActivity scope: ${cardAnimScope.coroutineContext}")
+    val cardAnimState = remember {
+        CardAnimState(sourceCornerRadiusPx, cardAnimScope)
+    }
+
     Box(
         Modifier.fillMaxSize()
     ) {
         val backgroundLayer = LocalRootGraphicsLayer.current!!
-        CompositionLocalProvider(
-            LocalBottomBarPadding provides bottomBarHeight,
-            LocalIsLogin provides uiState.isLoggedIn,
-            LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) }
+        CardAnimRoot(
+            state = cardAnimState,
+            modifier = Modifier.fillMaxSize()
         ) {
-            SharedTransitionLayout(
-                modifier = Modifier.then(
-                    if (isCaptureEnabled) Modifier.captureBackground(
-                        backgroundLayer
-                    ) else Modifier
-                )
+            CompositionLocalProvider(
+                LocalBottomBarPadding provides bottomBarHeight,
+                LocalIsLogin provides uiState.isLoggedIn,
+                LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) },
+                LocalCardAnimState provides cardAnimState
             ) {
-                CompositionLocalProvider(
-                    LocalSharedTransitionScope provides this
-                ) {
-                    NavDisplay(
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+            NavDisplay(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .then(
+                                if (isCaptureEnabled) Modifier.captureBackground(backgroundLayer) else Modifier
+                            ),
                         backStack = activeStack,
-                        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null },
-                        popTransitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null },
-                        predictivePopTransitionSpec = { _ -> fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null },
+                        transitionSpec = {
+                            fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null
+                        },
+                        popTransitionSpec = {
+                            fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null
+                        },
+                        predictivePopTransitionSpec = { _ ->
+                            fadeIn(tween(300)) togetherWith fadeOut(tween(300)) using null
+                        },
                         entryProvider = entryProvider {
                             /**
                              * Home对应栈
@@ -163,7 +177,10 @@ fun RootView(
                                 }
                             }
                             entry<EntryHomeDetail> {
-                                HomeDetail(it.id)
+                                HomeDetail(
+                                    id = it.id,
+                                    onBack = { activeStack.removeAt(activeStack.lastIndex) }
+                                )
                             }
 
                             /**
@@ -219,7 +236,6 @@ fun RootView(
                             }
                         }
                     )
-                }
             }
         }
 

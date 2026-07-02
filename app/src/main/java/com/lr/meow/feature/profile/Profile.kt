@@ -1,6 +1,10 @@
 package com.lr.meow.feature.profile
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,27 +42,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.clickable
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
+import com.lr.animation.diysharedelement.model.CardAnimTransform
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
-import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.components.bouncyClickable
+import com.lr.meow.ui.theme.LocalBottomBarPadding
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import com.lr.meow.ui.theme.LocalSharedTransitionScope
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.AnimatedVisibilityScope
 
 @Composable
 fun Profile(
@@ -74,8 +72,13 @@ fun Profile(
     val recentSongs = viewModel.recentSongsPagingFlow.collectAsLazyPagingItems()
     val recentPlaylists = viewModel.recentPlaylistsPagingFlow.collectAsLazyPagingItems()
 
-    val sharedScope = LocalSharedTransitionScope.current ?: return
-    val animatedScope = LocalNavAnimatedContentScope.current
+    val cardAnimState = LocalCardAnimState.current
+
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val targetSizePx = with(density) { 120.dp.toPx() }
+    val targetXPx = with(density) { 20.dp.toPx() }
+    val targetYPx = with(density) { 140.dp.toPx() }
+    val targetRadiusPx = with(density) { 16.dp.toPx() }
 
     var isSongsExpanded by remember { mutableStateOf(true) }
     var isPlaylistsExpanded by remember { mutableStateOf(true) }
@@ -97,7 +100,7 @@ fun Profile(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                        Brush.verticalGradient(
                             colors = listOf(
                                 colorScheme.background.copy(alpha = 0.3f),
                                 colorScheme.background.copy(alpha = 0.8f),
@@ -359,22 +362,35 @@ fun Profile(
                                         Column(
                                             modifier = Modifier
                                                 .width(120.dp)
-                                                .bouncyClickable { onPlaylistClick(playlist.id, playlist.coverImgUrl) }
+                                                .bouncyClickable { 
+                                                    val ready = cardAnimState.prepareExpand("playlist_cover_${playlist.id}") { _ ->
+                                                        CardAnimTransform(
+                                                            x = targetXPx,
+                                                            y = targetYPx,
+                                                            width = targetSizePx,
+                                                            height = targetSizePx,
+                                                            cornerRadius = targetRadiusPx
+                                                        )
+                                                    }
+                                                    if (ready) {
+                                                        onPlaylistClick(playlist.id, playlist.coverImgUrl)
+                                                        cardAnimState.animScope.launch { cardAnimState.runExpand() }
+                                                    }
+                                                }
                                         ) {
-                                            with(sharedScope) {
+                                            com.lr.animation.diysharedelement.modifier.SharedElement(
+                                                cardId = "playlist_cover_${playlist.id}",
+                                                modifier = Modifier
+                                                    .size(120.dp)
+                                            ) {
                                                 AsyncImage(
                                                     model = playlist.coverImgUrl,
                                                     contentDescription = "Playlist Cover",
                                                     contentScale = ContentScale.Crop,
                                                     modifier = Modifier
-                                                        .size(120.dp)
+                                                        .fillMaxSize()
                                                         .clip(RoundedCornerShape(12.dp))
                                                         .background(colorScheme.surfaceVariant)
-                                                        .sharedBounds(
-                                                            sharedContentState = rememberSharedContentState(key = "playlist_cover_${playlist.id}"),
-                                                            animatedVisibilityScope = animatedScope,
-                                                            clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(12.dp))
-                                                        )
                                                 )
                                             }
                                             Spacer(Modifier.height(8.dp))

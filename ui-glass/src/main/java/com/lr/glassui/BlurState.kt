@@ -134,7 +134,7 @@ fun Modifier.glassBlurBackground(
 ): Modifier = composed {
     var barRect by remember { mutableStateOf(IntRect.Zero) }
     
-    LaunchedEffect(barRect) {
+    LaunchedEffect(Unit) {
         while (isActive) {
             if (!barRect.isEmpty && layer.size.width > 0) {
                 try {
@@ -213,6 +213,9 @@ fun Modifier.glassBlurBackground(
     }
 }
 
+// 全局复用编译好的 Shader，避免在每一帧 (120fps) 重复编译，否则会导致毁灭性的掉帧！
+private val cachedGlassShader by lazy { RuntimeShader(glassAGSL) }
+
 private fun buildRefractionChain(
     blurRadius: Float,
     barRect: IntRect,
@@ -221,7 +224,7 @@ private fun buildRefractionChain(
     dispersionFactor: Float = 5f,
     rimBrightness: Float = 0.15f
 ): RenderEffect {
-    val shader = RuntimeShader(glassAGSL)
+    val shader = cachedGlassShader
     shader.setFloatUniform("barCenter", barRect.center.x.toFloat(), barRect.center.y.toFloat())
     shader.setFloatUniform("barHalfSize", barRect.width / 2f, barRect.height / 2f)
     shader.setFloatUniform("iRadius", cornerRadiusPx)
