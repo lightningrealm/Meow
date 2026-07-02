@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.lr.animation.diysharedelement.model.CardAnimTransform
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
 import com.lr.meow.feature.profile.SharedUserViewModel
@@ -47,13 +48,6 @@ import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import com.lr.meow.ui.theme.LocalSharedTransitionScope
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.core.spring
-import com.lr.animation.diysharedelement.model.CardAnimTransform
-import kotlinx.coroutines.launch
 
 @Composable
 fun Library(

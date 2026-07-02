@@ -7,6 +7,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import com.lr.core.datastore.di.datastoreModule
 import com.lr.core.network.di.networkModule
+import com.lr.meow.core.CrashHandler
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 
@@ -18,6 +19,7 @@ class Myapp: Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        CrashHandler.init(this)
         initKoin()
     }
 

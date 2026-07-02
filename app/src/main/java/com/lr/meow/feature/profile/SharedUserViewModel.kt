@@ -3,10 +3,12 @@ package com.lr.meow.feature.profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.lr.core.datastore.CachedProfile
-import com.lr.core.datastore.CookieStorage
 import com.lr.core.datastore.ProfileStorage
 import com.lr.core.network.PersistentCookieJar
 import com.lr.core.network.api.MeowAuthService
@@ -17,16 +19,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 
 
 class SharedUserViewModel(
