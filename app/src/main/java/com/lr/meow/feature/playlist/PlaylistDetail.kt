@@ -31,6 +31,7 @@ import com.lr.meow.ui.theme.LocalBottomBarPadding
 import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.launch
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
+import com.lr.animation.diysharedelement.modifier.SharedElement
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -187,6 +188,25 @@ fun PlaylistDetail(
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.6f))
                 )
+
+                // Small Cover
+                SharedElement(
+                    cardId = "playlist_cover_${playlistId}",
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 20.dp)
+                        .offset(y = (-20).dp)
+                        .size(120.dp)
+                ) {
+                    AsyncImage(
+                        model = displayCover,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(16.dp))
+                    )
+                }
 
                 // Top Bar
                 TopAppBar(
