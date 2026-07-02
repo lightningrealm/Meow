@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,11 +57,15 @@ import com.lr.meow.feature.home.Home
 import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
 import com.lr.meow.feature.login.Login
+import com.lr.meow.feature.player.PlayerScreen
 import com.lr.meow.feature.playlist.PlaylistDetail
 import com.lr.meow.feature.profile.Profile
+import com.lr.meow.feature.profile.SharedUserIntent
+import com.lr.meow.feature.profile.SharedUserViewModel
 import com.lr.meow.feature.search.Search
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
+import com.lr.meow.ui.theme.LocalIsMusicPlaying
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
 import com.lr.meow.ui.theme.MeowTheme
 import kotlinx.coroutines.delay
@@ -87,7 +92,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RootView(
     viewModel: MainViewModel = koinViewModel(),
-    sharedUserViewModel: com.lr.meow.feature.profile.SharedUserViewModel = koinViewModel()
+    sharedUserViewModel: SharedUserViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -126,7 +131,7 @@ fun RootView(
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
-            sharedUserViewModel.dispatch(com.lr.meow.feature.profile.SharedUserIntent.RefreshProfile)
+            sharedUserViewModel.dispatch(SharedUserIntent.RefreshProfile)
         }
     }
 
@@ -137,10 +142,17 @@ fun RootView(
         CardAnimState(sourceCornerRadiusPx, cardAnimScope)
     }
 
+    var showPlayerScreen by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
+
     Box(
         Modifier.fillMaxSize()
     ) {
         val backgroundLayer = LocalRootGraphicsLayer.current!!
+        
         CardAnimRoot(
             state = cardAnimState,
             modifier = Modifier.fillMaxSize()
@@ -237,10 +249,13 @@ fun RootView(
                         }
                     )
             }
-        }
 
+        } // End of CardAnimRoot
+
+        val isMusicPlaying = LocalIsMusicPlaying.current
+        
         AnimatedVisibility(
-            visible = isBottomBarVisible,
+            visible = isBottomBarVisible || isMusicPlaying,
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
@@ -257,16 +272,31 @@ fun RootView(
             CustomFrostedGlassBottomBar(
                 modifier = Modifier
                     .onGloballyPositioned { coordinates ->
-                        bottomBarHeight = with(density) {
-                            coordinates.size.height.toDp() + 16.dp
+                        if (!showPlayerScreen) {
+                            bottomBarHeight = with(density) {
+                                coordinates.size.height.toDp() + 16.dp
+                            }
                         }
                     },
                 currentTab = uiState.currentTab,
+                isBottomBarVisible = isBottomBarVisible,
+                isExpanded = showPlayerScreen,
                 graphicsLayer = backgroundLayer,
-            ) { selectedTab ->
-                viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
-            }
+                onMiniPlayerClick = {
+                    showPlayerScreen = true
+                },
+                onTabSelected = { selectedTab ->
+                    viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
+                },
+                playerScreenContent = { glassEnv ->
+                    PlayerScreen(
+                        glassEnv = glassEnv,
+                        onBack = { showPlayerScreen = false }
+                    )
+                }
+            )
         }
+        
         Login(
             showBottomSheet = uiState.showLoginSheet,
             onDismissRequest = { viewModel.dispatch(MainIntent.DismissLogin) }

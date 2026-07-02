@@ -1,12 +1,23 @@
 package com.lr.meow.ui.common.component.glass
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +28,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -55,9 +67,13 @@ import com.lr.meow.ui.theme.LocalIsMusicPlaying
 fun CustomFrostedGlassBottomBar(
     modifier: Modifier = Modifier,
     currentTab: MyNavTab,
+    isBottomBarVisible: Boolean = true,
+    isExpanded: Boolean = false,
     graphicsLayer: GraphicsLayer,
-    onTabSelected: (MyNavTab)-> Unit
-){
+    onTabSelected: (MyNavTab) -> Unit,
+    onMiniPlayerClick: () -> Unit = {},
+    playerScreenContent: @Composable (glassEnv: GlassEnvironment) -> Unit = {}
+) {
     var glassEnv by remember {
         mutableStateOf(
             GlassEnvironment(
@@ -82,17 +98,34 @@ fun CustomFrostedGlassBottomBar(
         targetValue = glassEnv.dominantColor.copy(alpha = if (glassEnv.isDark) 0.6f else 0.25f),
         animationSpec = tween(500)
     )
-    
+
     val isMusicPlaying = LocalIsMusicPlaying.current
     val tabs = myNavTabs
 
-    // 核心改造：使用 Column 将播放器和导航栏封装在“同一块玻璃”内
-    Column(
+    val bounciness = 0.65f // Q弹程度 (越小越弹，默认 1.0 不弹)
+    val speed = Spring.StiffnessMedium // 收缩速度
+
+    val animatedPadding by animateDpAsState(
+        if (isExpanded) 0.dp else 24.dp,
+        spring(dampingRatio = bounciness, stiffness = speed)
+    )
+    val animatedRadius by animateDpAsState(
+        if (isExpanded) 0.dp else 32.dp,
+        spring(dampingRatio = bounciness, stiffness = speed)
+    )
+    val bottomInsets = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val animatedBottomPadding by animateDpAsState(
+        if (isExpanded) 0.dp else bottomInsets,
+        spring(dampingRatio = bounciness, stiffness = speed)
+    )
+
+    // 核心改造：使用 Box 将播放器和导航栏封装在“同一块玻璃”内，手动管理尺寸与透明度
+    Box(
         modifier = Modifier
-            .padding(horizontal = 24.dp)
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = animatedPadding.coerceAtLeast(0.dp))
+            .padding(bottom = animatedBottomPadding.coerceAtLeast(0.dp))
             .fillMaxWidth()
-            .clip(RoundedCornerShape(32.dp))
+            .clip(RoundedCornerShape(animatedRadius.coerceAtLeast(0.dp)))
             // AGSL 玻璃截取：整个大容器只渲染一次 Shader
             .glassBlurBackground(graphicsLayer, blurRadius = 15f) { glassEnviroment ->
                 glassEnv = glassEnviroment
@@ -101,63 +134,111 @@ fun CustomFrostedGlassBottomBar(
             .border(
                 width = 0.8.dp,
                 color = borderLight,
-                shape = RoundedCornerShape(32.dp)
+                shape = RoundedCornerShape(animatedRadius.coerceAtLeast(0.dp))
             )
-            // 流体变形动画核心：当内容变化时，高度如流体般撑开
-            .animateContentSize(spring(stiffness = Spring.StiffnessMediumLow))
-            .then(modifier)
+            // 流体变形动画核心：完全由外壳控制尺寸
+            .animateContentSize(
+                if (isExpanded)
+                    tween(300, easing = FastOutSlowInEasing)
+                else
+                    spring(dampingRatio = bounciness, stiffness = speed)
+            )
+            .run { if (isExpanded) fillMaxHeight() else this }
+            .then(modifier),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        
-        // --- 迷你播放器部分 ---
-        AnimatedVisibility(
-            visible = isMusicPlaying
-        ) {
-            GlassMiniPlayer(glassEnv, borderLight)
+        val playerAlpha by animateFloatAsState(
+            targetValue = if (isExpanded) 1f else 0f,
+            animationSpec = tween(if (isExpanded) 500 else 200)
+        )
+        val miniAlpha by animateFloatAsState(
+            targetValue = if (isExpanded) 0f else 1f,
+            animationSpec = tween(if (isExpanded) 200 else 500)
+        )
+
+        // --- 全屏播放器部分 ---
+        // 使用 matchParentSize，这样它就不会在消失时撑开 Box，而是被动拉伸/压缩，实现原生级流体变形
+        if (isExpanded || playerAlpha > 0f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer { this.alpha = playerAlpha }
+            ) {
+                playerScreenContent(glassEnv)
+            }
         }
 
-        // --- 底部导航栏部分 ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            tabs.forEach { (tabTarget,outlinedIcon,icon, name) ->
-                val isSelected = currentTab == tabTarget
-                val interactionSource  = remember { MutableInteractionSource() }
-                // 环境感知与反色配色
-                val targetColor = if (glassEnv.isDark) {
-                    Color.White.copy(alpha = if (isSelected) 1f else 0.6f)
-                } else {
-                    Color.Black.copy(alpha = if (isSelected) 1f else 0.5f)
+        // --- 底部导航栏与迷你播放器部分 ---
+        if (!isExpanded || miniAlpha > 0f) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { this.alpha = miniAlpha }
+            ) {
+                // --- 迷你播放器部分 ---
+                AnimatedVisibility(
+                    visible = isMusicPlaying
+                ) {
+                    Box(
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onMiniPlayerClick
+                        )
+                    ) {
+                        GlassMiniPlayer(glassEnv, borderLight)
+                    }
                 }
-                
-                val itemColor by animateColorAsState(
-                    targetValue = targetColor,
-                    animationSpec = tween(400)
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null
-                        ){ onTabSelected(tabTarget) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ){
-                    Icon(
-                        imageVector = if(isSelected) icon else outlinedIcon,
-                        contentDescription = name,
-                        tint = itemColor
-                    )
-                    Text(
-                        text = name,
-                        color = itemColor,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                    )
+
+                // --- 底部导航栏部分 ---
+                AnimatedVisibility(
+                    visible = isBottomBarVisible
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        tabs.forEach { (tabTarget, outlinedIcon, icon, name) ->
+                            val isSelected = currentTab == tabTarget
+                            val interactionSource = remember { MutableInteractionSource() }
+                            // 环境感知与反色配色
+                            val targetColor = if (glassEnv.isDark) {
+                                Color.White.copy(alpha = if (isSelected) 1f else 0.6f)
+                            } else {
+                                Color.Black.copy(alpha = if (isSelected) 1f else 0.5f)
+                            }
+
+                            val itemColor by animateColorAsState(
+                                targetValue = targetColor,
+                                animationSpec = tween(400)
+                            )
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null
+                                    ) { onTabSelected(tabTarget) },
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isSelected) icon else outlinedIcon,
+                                    contentDescription = name,
+                                    tint = itemColor
+                                )
+                                Text(
+                                    text = name,
+                                    color = itemColor,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
