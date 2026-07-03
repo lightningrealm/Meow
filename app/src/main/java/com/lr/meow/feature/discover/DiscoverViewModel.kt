@@ -8,6 +8,8 @@ import com.lr.core.network.model.RecommendSong
 import com.lr.core.network.model.Toplist
 import com.lr.core.network.model.Album
 import com.lr.core.network.model.Artist
+import com.lr.meow.R
+import com.lr.meow.ui.common.util.UiText
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +20,7 @@ data class DiscoverUiState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val needsLogin: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     val recommendPlaylists: List<RecommendPlaylist> = emptyList(),
     val toplists: List<Toplist> = emptyList(),
     val newAlbums: List<Album> = emptyList(),
@@ -62,7 +64,11 @@ class DiscoverViewModel(
                     isLoading = false,
                     isError = true,
                     needsLogin = isAuthError,
-                    errorMessage = if (isAuthError) "登录已过期，请重新登录" else e.localizedMessage
+                    errorMessage = if (isAuthError) {
+                        UiText.StringResource(R.string.login_expired)
+                    } else {
+                        e.localizedMessage?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.load_failed)
+                    }
                 )
             }
         }

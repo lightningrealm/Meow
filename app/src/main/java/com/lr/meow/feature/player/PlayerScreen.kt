@@ -27,6 +27,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.getValue
 import com.lr.glassui.model.GlassEnvironment
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 
 @Composable
 fun PlayerScreen(
@@ -80,7 +83,7 @@ fun PlayerScreen(
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "正在播放",
+                    text = stringResource(id = R.string.now_playing),
                     color = targetColor,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp

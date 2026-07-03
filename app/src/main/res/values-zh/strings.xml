@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Meow</string>
+    <string name="nav_home">主页</string>
+    <string name="welcome_back">欢迎回来</string>
+    <string name="phone_number">手机号</string>
+    <string name="verification_code">验证码</string>
+    <string name="sign_in">登录</string>
+    <string name="nav_discover">发现</string>
+    <string name="nav_library">音乐库</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_profile">档案</string>
+    
+    <string name="login_success">登录成功</string>
+    <string name="login_sync_hint">验证手机号以同步您的音乐库。</string>
+    <string name="get_captcha">获取验证码</string>
+    <string name="guest_login">随便看看 (游客登录)</string>
+    <string name="phone_empty_error">请输入手机号</string>
+    <string name="captcha_empty_error">请输入验证码</string>
+    <string name="send_captcha_failed">发送验证码失败</string>
+    <string name="network_error">网络异常</string>
+    <string name="phone_captcha_empty_error">请输入手机号和验证码</string>
+    <string name="login_failed_code">登录失败: Code %1$d</string>
+    <string name="login_failed">登录失败</string>
+    
+    <string name="login_expired">登录已过期，请重新登录</string>
+    <string name="login_view_recs">登录后查看每日推荐</string>
+    <string name="login_listen_fm">登录后收听私人 FM</string>
+    <string name="login_view_library">登录后查看您的音乐库</string>
+    <string name="relogin">重新登录</string>
+    <string name="login_now">立即登录</string>
+    <string name="load_failed">加载失败</string>
+    <string name="retry">重试</string>
+    <string name="daily_recommend">每日推荐歌曲</string>
+    <string name="daily_recommend_desc">根据你的音乐口味生成，每天6:00更新</string>
+    <string name="private_fm">私人 FM</string>
+    <string name="private_fm_desc">最懂你的音乐电台，随时随地</string>
+    <string name="unknown_song">未知歌曲</string>
+    <string name="tuning">正在调频...</string>
+    
+    <string name="play_all">播放全部</string>
+    <string name="song_count_format">(共 %1$d 首)</string>
+    <string name="playlist">歌单</string>
+    
+    <string name="login_to_discover">登录后发现更多好音乐</string>
+    <string name="recommend_playlist">推荐歌单</string>
+    <string name="official_charts">官方榜单</string>
+    <string name="unknown_chart">未知榜单</string>
+    <string name="new_albums">新碟首发</string>
+    <string name="unknown_album">未知专辑</string>
+    <string name="unknown_artist">未知歌手</string>
+    <string name="hot_artists">热门歌手</string>
+    
+    <string name="my_music">我的音乐</string>
+    <string name="favorite_playlists">收藏歌单</string>
+    <string name="no_playlists">暂无歌单</string>
+    <string name="track_count_format">%1$d 首</string>
+    
+    <string name="search_playlist_info">%1$d首，by %2$s</string>
+    <string name="search_failed_code">搜索失败: Code %1$d</string>
+    <string name="search_failed">搜索失败</string>
+    <string name="songs">单曲</string>
+    
+    <string name="unknown_user_id">未获取到用户ID，请重新登录</string>
+    <string name="recent_songs">最近播放 - 歌曲</string>
+    <string name="recent_playlists">最近播放 - 歌单</string>
+    
+    <string name="now_playing">正在播放</string>
+    <string name="search_placeholder">歌手、歌曲或播客</string>
+    <string name="search_history">搜索历史</string>
+    <string name="clear_history">清空历史记录</string>
+    <string name="hot_searches">热门搜索</string>
+</resources>

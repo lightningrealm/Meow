@@ -9,6 +9,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.lr.meow.ui.common.util.UiText
+import com.lr.meow.R
+
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
@@ -146,10 +149,10 @@ class SearchViewModel(
                         )
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, isError = true, errorMessage = "Search failed code ${response.code}") }
+                    _uiState.update { it.copy(isLoading = false, isError = true, errorMessage = UiText.StringResource(R.string.search_failed_code, response.code)) }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, isError = true, errorMessage = e.message) }
+                _uiState.update { it.copy(isLoading = false, isError = true, errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.search_failed)) }
             }
         }
     }

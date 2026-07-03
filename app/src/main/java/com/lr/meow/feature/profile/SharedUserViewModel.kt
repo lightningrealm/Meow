@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.lr.meow.ui.common.util.UiText
+import com.lr.meow.R
+
 
 
 class SharedUserViewModel(
@@ -35,7 +38,7 @@ class SharedUserViewModel(
 
     private val _isLoading = MutableStateFlow(false)
     private val _isError = MutableStateFlow(false)
-    private val _errorMessage = MutableStateFlow<String?>(null)
+    private val _errorMessage = MutableStateFlow<UiText?>(null)
 
     // Combine loading states with cached profile flow
     val uiState: StateFlow<SharedUserUiState> = combine(
@@ -134,7 +137,7 @@ class SharedUserViewModel(
                 if (accountId == null) {
                     _isLoading.value = false
                     _isError.value = true
-                    _errorMessage.value = "登录已过期，请重新登录"
+                    _errorMessage.value = UiText.StringResource(R.string.login_expired)
                     logout()
                     return@launch
                 }
@@ -152,7 +155,7 @@ class SharedUserViewModel(
                 if (uid == null) {
                     _isLoading.value = false
                     _isError.value = true
-                    _errorMessage.value = "未获取到用户ID，请重新登录"
+                    _errorMessage.value = UiText.StringResource(R.string.unknown_user_id)
                     logout()
                     return@launch
                 }
@@ -196,7 +199,7 @@ class SharedUserViewModel(
                 Log.e("SharedUserViewModel", "Failed to fetch profile", e)
                 _isLoading.value = false
                 _isError.value = true
-                _errorMessage.value = e.message ?: "网络异常"
+                _errorMessage.value = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.network_error)
             }
         }
     }

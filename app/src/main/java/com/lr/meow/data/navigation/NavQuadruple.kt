@@ -12,42 +12,43 @@ import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.lr.meow.R
 
 data class NavQuadruple(
     val destGraph: MyNavTab,
     val outlinedIcon: ImageVector,
     val icon: ImageVector,
-    val label: String
+    val labelResId: Int
 )
 val myNavTabs = listOf(
     NavQuadruple(
         MyNavTab.HOME,
         Icons.Outlined.Home,
         Icons.Default.Home,
-        "主页"
+        R.string.nav_home
     ),
     NavQuadruple(
         MyNavTab.DISCOVER,
         Icons.Outlined.Explore,
         Icons.Default.Explore,
-        "发现"
+        R.string.nav_discover
     ),
     NavQuadruple(
         MyNavTab.LIBRARY,
         Icons.Outlined.LibraryMusic,
         Icons.Default.LibraryMusic,
-        "音乐库"
+        R.string.nav_library
     ),
     NavQuadruple(
         MyNavTab.SEARCH,
         Icons.Outlined.Search,
         Icons.Default.Search,
-        "搜索"
+        R.string.nav_search
     ),
     NavQuadruple(
         MyNavTab.PROFILE,
         Icons.Outlined.Person,
         Icons.Default.Person,
-        "档案"
+        R.string.nav_profile
     )
 )

@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import com.lr.meow.ui.common.util.UiText
+import com.lr.meow.R
+
 
 class PlaylistDetailViewModel(
     private val playlistService: MeowPlaylistService
@@ -50,7 +53,7 @@ class PlaylistDetailViewModel(
                         it.copy(
                             isLoading = false,
                             isError = true,
-                            errorMessage = "Failed to load playlist: Code ${detailResponse.code} / ${tracksResponse.code}"
+                            errorMessage = UiText.DynamicString("Failed to load playlist: Code ${detailResponse.code} / ${tracksResponse.code}")
                         )
                     }
                 }
@@ -60,7 +63,7 @@ class PlaylistDetailViewModel(
                     it.copy(
                         isLoading = false,
                         isError = true,
-                        errorMessage = e.message ?: "Unknown error"
+                        errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.load_failed)
                     )
                 }
             }

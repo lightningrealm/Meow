@@ -3,6 +3,8 @@ package com.lr.meow.feature.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lr.core.network.api.MeowAuthService
+import com.lr.meow.R
+import com.lr.meow.ui.common.util.UiText
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +21,7 @@ data class LoginUiState(
     val isSendingCode: Boolean = false,
     val isLoggingIn: Boolean = false,
     val countdownSeconds: Int = 0,
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 )
 
 class LoginViewModel(
@@ -47,7 +49,7 @@ class LoginViewModel(
     fun sendCaptcha() {
         val phone = _uiState.value.phone
         if (phone.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "请输入手机号") }
+            _uiState.update { it.copy(errorMessage = UiText.StringResource(R.string.phone_empty_error)) }
             return
         }
 
@@ -58,21 +60,23 @@ class LoginViewModel(
                 if (response.code == 200) {
                     startCountdown()
                 } else {
-                    _uiState.update { it.copy(errorMessage = response.message ?: "发送验证码失败") }
+                    _uiState.update { it.copy(errorMessage = response.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.send_captcha_failed)) }
                 }
             } catch (e: retrofit2.HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
-                var displayMsg = "发送验证码失败"
+                var displayMsg: UiText = UiText.StringResource(R.string.send_captcha_failed)
                 if (!errorBody.isNullOrBlank()) {
                     try {
                         val json = org.json.JSONObject(errorBody)
-                        if (json.has("message")) displayMsg = json.getString("message")
-                        else if (json.has("msg")) displayMsg = json.getString("msg")
+                        val msg = if (json.has("message")) json.getString("message") else if (json.has("msg")) json.getString("msg") else null
+                        if (msg != null) {
+                            displayMsg = UiText.DynamicString(msg)
+                        }
                     } catch (ignored: Exception) {}
                 }
                 _uiState.update { it.copy(errorMessage = displayMsg) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = e.message ?: "网络异常") }
+                _uiState.update { it.copy(errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.network_error)) }
             } finally {
                 _uiState.update { it.copy(isSendingCode = false) }
             }
@@ -94,7 +98,7 @@ class LoginViewModel(
         val captcha = _uiState.value.captcha
 
         if (phone.isBlank() || captcha.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "请输入手机号和验证码") }
+            _uiState.update { it.copy(errorMessage = UiText.StringResource(R.string.phone_captcha_empty_error)) }
             return
         }
 
@@ -106,21 +110,23 @@ class LoginViewModel(
                     // 登录成功，触发 UI 事件关闭弹窗
                     _loginSuccessEvent.emit(Unit)
                 } else {
-                    _uiState.update { it.copy(errorMessage = "登录失败: Code ${response.code}") }
+                    _uiState.update { it.copy(errorMessage = UiText.StringResource(R.string.login_failed_code, response.code)) }
                 }
             } catch (e: retrofit2.HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
-                var displayMsg = "登录失败"
+                var displayMsg: UiText = UiText.StringResource(R.string.login_failed)
                 if (!errorBody.isNullOrBlank()) {
                     try {
                         val json = org.json.JSONObject(errorBody)
-                        if (json.has("message")) displayMsg = json.getString("message")
-                        else if (json.has("msg")) displayMsg = json.getString("msg")
+                        val msg = if (json.has("message")) json.getString("message") else if (json.has("msg")) json.getString("msg") else null
+                        if (msg != null) {
+                            displayMsg = UiText.DynamicString(msg)
+                        }
                     } catch (ignored: Exception) {}
                 }
                 _uiState.update { it.copy(errorMessage = displayMsg) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = e.message ?: "网络异常") }
+                _uiState.update { it.copy(errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.network_error)) }
             } finally {
                 _uiState.update { it.copy(isLoggingIn = false) }
             }

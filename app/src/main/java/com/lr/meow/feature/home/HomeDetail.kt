@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +69,7 @@ import coil3.compose.AsyncImage
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
+import com.lr.meow.R
 import com.lr.meow.ui.common.card.SwipeDirection
 import com.lr.meow.ui.common.card.SwipeableTinderCard
 import com.lr.meow.ui.components.bouncyClickable
@@ -210,14 +212,14 @@ private fun DailyRecommendContent(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = if (uiState.needsLogin) "登录已过期，请重新登录" else "登录后查看每日推荐",
+                text = if (uiState.needsLogin) stringResource(id = R.string.login_expired) else stringResource(id = R.string.login_view_recs),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
             Button(onClick = { requireAuth() }) {
-                Text(if (uiState.needsLogin) "重新登录" else "立即登录")
+                Text(if (uiState.needsLogin) stringResource(id = R.string.relogin) else stringResource(id = R.string.login_now))
             }
         }
     } else if (uiState.isLoading && uiState.recommendSongs.isEmpty()) {
@@ -229,12 +231,12 @@ private fun DailyRecommendContent(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = uiState.errorMessage ?: "加载失败",
+                text = uiState.errorMessage?.asString() ?: stringResource(id = R.string.load_failed),
                 color = colorScheme.error,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             Button(onClick = { viewModel.fetchRecommendSongs() }) {
-                Text("重试")
+                Text(stringResource(id = R.string.retry))
             }
         }
     } else {
@@ -255,7 +257,7 @@ private fun DailyRecommendContent(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "每日推荐歌曲",
+                        text = stringResource(id = R.string.daily_recommend),
                         fontSize = 34.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White,
@@ -269,7 +271,7 @@ private fun DailyRecommendContent(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "根据你的音乐口味生成，每天6:00更新",
+                        text = stringResource(id = R.string.daily_recommend_desc),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White.copy(alpha = 0.85f),
@@ -306,7 +308,7 @@ private fun DailyRecommendContent(
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = song.name ?: "未知歌曲",
+                            text = song.name ?: stringResource(id = R.string.unknown_song),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = colorScheme.onBackground,
@@ -379,14 +381,14 @@ private fun PersonalFmContent(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = if (uiState.needsLogin) "登录已过期，请重新登录" else "登录后收听私人 FM",
+                text = if (uiState.needsLogin) stringResource(id = R.string.login_expired) else stringResource(id = R.string.login_listen_fm),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
             Button(onClick = { requireAuth() }) {
-                Text(if (uiState.needsLogin) "重新登录" else "立即登录")
+                Text(if (uiState.needsLogin) stringResource(id = R.string.relogin) else stringResource(id = R.string.login_now))
             }
         }
     } else if (uiState.isLoading && uiState.personalFmSongs.isEmpty()) {
@@ -397,7 +399,7 @@ private fun PersonalFmContent(
         ) {
             CircularProgressIndicator(color = Color.White)
             Spacer(Modifier.height(16.dp))
-            Text("正在调频...", color = Color.White.copy(alpha = 0.8f))
+            Text(stringResource(id = R.string.tuning), color = Color.White.copy(alpha = 0.8f))
         }
     } else if (uiState.isError && uiState.personalFmSongs.isEmpty()) {
         Column(
@@ -406,12 +408,12 @@ private fun PersonalFmContent(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = uiState.errorMessage ?: "加载失败",
+                text = uiState.errorMessage?.asString() ?: stringResource(id = R.string.load_failed),
                 color = colorScheme.error,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             Button(onClick = { viewModel.fetchPersonalFm() }) {
-                Text("重试")
+                Text(stringResource(id = R.string.retry))
             }
         }
     } else {
@@ -427,7 +429,7 @@ private fun PersonalFmContent(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "私人 FM",
+                    text = stringResource(id = R.string.private_fm),
                     fontSize = 34.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
@@ -441,7 +443,7 @@ private fun PersonalFmContent(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "最懂你的音乐电台，随时随地",
+                    text = stringResource(id = R.string.private_fm_desc),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White.copy(alpha = 0.85f),
@@ -555,7 +557,7 @@ private fun PersonalFmContent(
                                     .padding(24.dp)
                             ) {
                                 Text(
-                                    text = song.name ?: "未知歌曲",
+                                    text = song.name ?: stringResource(id = R.string.unknown_song),
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,

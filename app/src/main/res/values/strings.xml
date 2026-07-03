@@ -1,3 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Meow</string>
+    <string name="nav_home">Home</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="verification_code">Verification Code</string>
+    <string name="sign_in">Sign In</string>
+    <string name="nav_discover">Discover</string>
+    <string name="nav_library">Library</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_profile">Profile</string>
+    
+    <string name="login_success">Login Successful</string>
+    <string name="login_sync_hint">Verify phone to sync library</string>
+    <string name="get_captcha">Get code</string>
+    <string name="guest_login">Guest Login</string>
+    <string name="phone_empty_error">Please enter phone number</string>
+    <string name="captcha_empty_error">Please enter verification code</string>
+    <string name="send_captcha_failed">Failed to send verification code</string>
+    <string name="network_error">Network error</string>
+    <string name="phone_captcha_empty_error">Please enter phone and verification code</string>
+    <string name="login_failed_code">Login failed: Code %1$d</string>
+    <string name="login_failed">Login failed</string>
+    
+    <string name="login_expired">Session expired, please login again</string>
+    <string name="login_view_recs">Login to view daily recommendations</string>
+    <string name="login_listen_fm">Login to listen to Private FM</string>
+    <string name="login_view_library">Login to view library</string>
+    <string name="relogin">Re-login</string>
+    <string name="login_now">Login now</string>
+    <string name="load_failed">Load failed</string>
+    <string name="retry">Retry</string>
+    <string name="daily_recommend">Daily Recommendations</string>
+    <string name="daily_recommend_desc">Personalized daily updates at 6:00</string>
+    <string name="private_fm">Private FM</string>
+    <string name="private_fm_desc">Personalized radio anytime, anywhere</string>
+    <string name="unknown_song">Unknown Song</string>
+    <string name="tuning">Tuning...</string>
+    
+    <string name="play_all">Play All</string>
+    <string name="song_count_format">(%1$d songs)</string>
+    <string name="playlist">Playlist</string>
+    
+    <string name="login_to_discover">Login to discover more music</string>
+    <string name="recommend_playlist">Recommended Playlists</string>
+    <string name="official_charts">Charts</string>
+    <string name="unknown_chart">Unknown Chart</string>
+    <string name="new_albums">New Releases</string>
+    <string name="unknown_album">Unknown Album</string>
+    <string name="unknown_artist">Unknown Artist</string>
+    <string name="hot_artists">Hot Artists</string>
+    
+    <string name="my_music">My Music</string>
+    <string name="favorite_playlists">Saved Playlists</string>
+    <string name="no_playlists">No playlists</string>
+    <string name="track_count_format">%1$d songs</string>
+    
+    <string name="search_playlist_info">%1$d songs, by %2$s</string>
+    <string name="search_failed_code">Search failed: Code %1$d</string>
+    <string name="search_failed">Search failed</string>
+    <string name="songs">Songs</string>
+    
+    <string name="unknown_user_id">User ID not found, please login again</string>
+    <string name="recent_songs">Recently Played - Songs</string>
+    <string name="recent_playlists">Recently Played - Playlists</string>
+    
+    <string name="now_playing">Now Playing</string>
+    <string name="search_placeholder">Artists, songs, or podcasts</string>
+    <string name="search_history">History</string>
+    <string name="clear_history">Clear History</string>
+    <string name="hot_searches">Hot Searches</string>
 </resources>

@@ -1,22 +1,38 @@
 package com.lr.meow.feature.login
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Pets
+import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lr.meow.R
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
@@ -33,17 +49,17 @@ fun Login(
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             dragHandle = {
-                // iOS-style subtle drag handle
+                // 更精致的 iOS 风格指示条
                 Box(
                     modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .width(36.dp)
-                        .height(5.dp)
-                        .clip(RoundedCornerShape(2.5.dp))
-                        .background(Color.Gray.copy(alpha = 0.3f))
+                        .padding(top = 12.dp, bottom = 16.dp)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                 )
             }
         ) {
@@ -59,14 +75,14 @@ private fun LoginContent(viewModel: LoginViewModel, onDismissRequest: () -> Unit
 
     LaunchedEffect(Unit) {
         viewModel.loginSuccessEvent.collectLatest {
-            Toast.makeText(context, "登录成功", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.login_success), Toast.LENGTH_SHORT).show()
             onDismissRequest()
         }
     }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, it.asString(context), Toast.LENGTH_SHORT).show()
             viewModel.dismissError()
         }
     }
@@ -74,125 +90,197 @@ private fun LoginContent(viewModel: LoginViewModel, onDismissRequest: () -> Unit
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 48.dp, top = 8.dp),
+            .padding(horizontal = 28.dp)
+            .padding(bottom = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Title
-        Text(
-            text = "Welcome Back",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = "验证手机号以同步您的音乐库。",
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Phone Field
-        IosStyleTextField(
-            value = uiState.phone,
-            onValueChange = { viewModel.updatePhone(it) },
-            placeholder = "Phone Number",
-            keyboardType = KeyboardType.Phone
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Captcha Field with Get Code Button
-        Box(contentAlignment = Alignment.CenterEnd) {
-            IosStyleTextField(
-                value = uiState.captcha,
-                onValueChange = { viewModel.updateCaptcha(it) },
-                placeholder = "Verification Code",
-                keyboardType = KeyboardType.Number,
-                paddingEnd = 100.dp
-            )
-            
-            Text(
-                text = if (uiState.countdownSeconds > 0) "${uiState.countdownSeconds}s" else "获取验证码",
-                color = if (uiState.countdownSeconds > 0 || uiState.isSendingCode) Color.Gray else MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .clickable(
-                        enabled = uiState.countdownSeconds == 0 && !uiState.isSendingCode
-                    ) {
-                        viewModel.sendCaptcha()
-                    }
+        // 1. 品牌 Logo (呼应 meow 包名)
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.MusicNote,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
             )
         }
-        
-        Spacer(modifier = Modifier.height(32.dp))
 
-        // Login Button
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 2. 标题区
+        Text(
+            text = stringResource(id = R.string.welcome_back),
+            fontSize = 26.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = stringResource(id = R.string.login_sync_hint),
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        // 3. 手机号输入框
+        ModernTextField(
+            value = uiState.phone,
+            onValueChange = { viewModel.updatePhone(it) },
+            placeholder = stringResource(id = R.string.phone_number),
+            icon = Icons.Rounded.Phone,
+            keyboardType = KeyboardType.Phone
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 4. 验证码输入框 (利用 trailingIcon 完美解决文字重叠问题)
+        ModernTextField(
+            value = uiState.captcha,
+            onValueChange = { viewModel.updateCaptcha(it) },
+            placeholder = stringResource(id = R.string.verification_code),
+            icon = Icons.Rounded.Lock,
+            keyboardType = KeyboardType.Number,
+            trailingContent = {
+                TextButton(
+                    onClick = { viewModel.sendCaptcha() },
+                    enabled = uiState.countdownSeconds == 0 && !uiState.isSendingCode,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp)
+                ) {
+                    Text(
+                        text = if (uiState.countdownSeconds > 0) "${uiState.countdownSeconds}s" else stringResource(id = R.string.get_captcha),
+                        color = if (uiState.countdownSeconds > 0 || uiState.isSendingCode)
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        else
+                            MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        // 5. 登录主按钮 (增加丝滑的 Loading 动画)
         Button(
             onClick = { viewModel.login() },
-            enabled = !uiState.isLoggingIn,
+            enabled = !uiState.isLoggingIn && uiState.phone.isNotEmpty() && uiState.captcha.isNotEmpty(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(54.dp),
+            shape = CircleShape, // 大圆角更具现代感
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            if (uiState.isLoggingIn) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
-            } else {
+            AnimatedContent(
+                targetState = uiState.isLoggingIn,
+                transitionSpec = {
+                    (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
+                        .using(SizeTransform(clip = false))
+                },
+                label = "login_button_anim"
+            ) { isLoggingIn ->
+                if (isLoggingIn) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.5.dp
+                    )
+                } else {
+                    Text(
+                        text = stringResource(id = R.string.sign_in),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 6. 底部附属操作
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = { /* TODO: Use Guest Account */ }) {
                 Text(
-                    text = "Sign In",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = stringResource(id = R.string.guest_login),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // 假装有遇到问题/找回密码入口
+            TextButton(onClick = { /* TODO: Help */ }) {
+                Text(
+                    text = "遇到问题？",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Secondary Action
-        TextButton(onClick = { /* TODO: Use Guest Account */ }) {
-            Text(
-                text = "随便看看 (游客登录)",
-                fontSize = 15.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 7. 补充协议声明 (提升专业感)
+        Text(
+            text = "登录即代表同意 用户协议 与 隐私政策",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
+// 高度定制化的现代风格 TextField
 @Composable
-private fun IosStyleTextField(
+private fun ModernTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
+    icon: ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text,
-    paddingEnd: androidx.compose.ui.unit.Dp = 0.dp
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = Color.Gray) },
+        placeholder = {
+            Text(placeholder, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                modifier = Modifier.size(20.dp)
+            )
+        },
+        trailingIcon = trailingContent,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp)),
+            .clip(RoundedCornerShape(16.dp)),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
+            disabledIndicatorColor = Color.Transparent,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         ),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = true

@@ -5,13 +5,15 @@ import com.lr.core.network.model.UserLevelResponse
 import com.lr.core.network.model.UserProfile
 import com.lr.core.network.model.UserSubcountResponse
 
+import com.lr.meow.ui.common.util.UiText
+
 /**
  * MVI Contract for Profile Screen
  */
 data class SharedUserUiState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     
     // User Info
     val userProfile: UserProfile? = null,

@@ -2,11 +2,12 @@ package com.lr.meow.feature.playlist
 
 import com.lr.core.network.model.PlaylistDetail
 import com.lr.core.network.model.RecommendSong
+import com.lr.meow.ui.common.util.UiText
 
 data class PlaylistDetailUiState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     val playlistDetail: PlaylistDetail? = null,
     val songs: List<RecommendSong> = emptyList()
 )

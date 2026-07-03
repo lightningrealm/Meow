@@ -38,6 +38,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.lr.animation.diysharedelement.model.CardAnimTransform
@@ -79,7 +82,10 @@ fun Library(
 
     // LaunchedEffect removed because data fetch is now handled globally in MainActivity
 
-    val tabs = listOf("我的音乐", "收藏歌单")
+    val tabs = listOf(
+        stringResource(id = R.string.my_music),
+        stringResource(id = R.string.favorite_playlists)
+    )
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
 
@@ -97,14 +103,14 @@ fun Library(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "登录后查看您的音乐库",
+                    text = stringResource(id = R.string.login_view_library),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
                 Button(onClick = { requireAuth() }) {
-                    Text("立即登录")
+                    Text(stringResource(id = R.string.login_now))
                 }
             }
         } else {
@@ -112,7 +118,7 @@ fun Library(
                 Spacer(Modifier.statusBarsPadding())
                 
                 Text(
-                    text = "音乐库",
+                    text = stringResource(id = R.string.nav_library),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = colorScheme.onBackground,
@@ -163,7 +169,7 @@ fun Library(
                                 CircularProgressIndicator(color = colorScheme.primary)
                             } else {
                                 Text(
-                                    text = "暂无歌单",
+                                    text = stringResource(id = R.string.no_playlists),
                                     color = colorScheme.onBackground.copy(alpha = 0.5f)
                                 )
                             }
@@ -228,7 +234,7 @@ fun Library(
                                         )
                                         Spacer(Modifier.height(4.dp))
                                         Text(
-                                            text = "${playlist.trackCount} 首",
+                                            text = stringResource(id = R.string.track_count_format, playlist.trackCount),
                                             fontSize = 14.sp,
                                             color = colorScheme.onBackground.copy(alpha = 0.6f)
                                         )

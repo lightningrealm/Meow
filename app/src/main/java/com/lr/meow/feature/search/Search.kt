@@ -31,6 +31,9 @@ import coil3.compose.AsyncImage
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.components.bouncyClickable
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 
 @Composable
 fun Search(viewModel: SearchViewModel = koinViewModel()) {
@@ -47,7 +50,7 @@ fun Search(viewModel: SearchViewModel = koinViewModel()) {
 
         // Header Title
         Text(
-            text = "Search",
+            text = stringResource(id = R.string.nav_search),
             fontSize = 34.sp,
             fontWeight = FontWeight.Bold,
             color = colorScheme.onBackground,
@@ -61,7 +64,7 @@ fun Search(viewModel: SearchViewModel = koinViewModel()) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 8.dp),
-            placeholder = { Text("Artists, songs, or podcasts") },
+            placeholder = { Text(stringResource(id = R.string.search_placeholder)) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Search Icon")
             },
@@ -116,13 +119,13 @@ private fun IdleState(uiState: SearchUiState, viewModel: SearchViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "History",
+                        text = stringResource(id = R.string.search_history),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = colorScheme.onBackground
                     )
                     IconButton(onClick = { viewModel.dispatch(SearchIntent.ClearHistory) }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear History", tint = colorScheme.onSurfaceVariant)
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.clear_history), tint = colorScheme.onSurfaceVariant)
                     }
                 }
                 FlowRow(
@@ -159,7 +162,7 @@ private fun IdleState(uiState: SearchUiState, viewModel: SearchViewModel) {
         if (uiState.hotSearches.isNotEmpty()) {
             item {
                 Text(
-                    text = "Hot Searches",
+                    text = stringResource(id = R.string.hot_searches),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorScheme.onBackground,
@@ -269,7 +272,7 @@ private fun ResultsState(uiState: SearchUiState, viewModel: SearchViewModel) {
                 Tab(
                     selected = uiState.activeTab == tab,
                     onClick = { viewModel.dispatch(SearchIntent.ChangeTab(tab)) },
-                    text = { Text(tab.title) }
+                    text = { Text(stringResource(id = tab.titleResId)) }
                 )
             }
         }
@@ -280,7 +283,7 @@ private fun ResultsState(uiState: SearchUiState, viewModel: SearchViewModel) {
             }
         } else if (uiState.isError) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(uiState.errorMessage ?: "Search failed", color = colorScheme.error)
+                Text(uiState.errorMessage?.asString() ?: stringResource(id = R.string.search_failed), color = colorScheme.error)
             }
         } else {
             LazyColumn(
@@ -339,7 +342,7 @@ private fun ResultsState(uiState: SearchUiState, viewModel: SearchViewModel) {
                                         maxLines = 1
                                     )
                                     Text(
-                                        text = "${playlist.trackCount}首，by ${playlist.creator?.nickname}",
+                                        text = stringResource(id = R.string.search_playlist_info, playlist.trackCount, playlist.creator?.nickname ?: stringResource(id = R.string.unknown_artist)),
                                         fontSize = 13.sp,
                                         color = colorScheme.onSurfaceVariant,
                                         maxLines = 1

@@ -28,6 +28,9 @@ import androidx.compose.ui.platform.LocalDensity
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.modifier.SharedElement
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,13 +43,29 @@ import com.lr.meow.ui.theme.LocalBottomBarPadding
 
 @Composable
 fun Home(
-    onNavigateToDetail:(Int)-> Unit
-){
+    onNavigateToDetail: (Int) -> Unit
+) {
     val colorScheme = MaterialTheme.colorScheme
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
     val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
+
+    val mockCards = listOf(
+        CardFaceData(
+            topTitle = "DAILY RECOMMEND",
+            title = stringResource(id = R.string.daily_recommend),
+            subTitle = stringResource(id = R.string.daily_recommend_desc),
+            backgroundGradient = listOf(Color(0xFFFF512F), Color(0xFFDD2476))
+        ),
+        CardFaceData(
+            topTitle = "PERSONAL FM",
+            title = stringResource(id = R.string.private_fm),
+            subTitle = stringResource(id = R.string.private_fm_desc),
+            backgroundGradient = listOf(Color(0xFF1CB5E0), Color(0xFF000851))
+        )
+    )
+
     Box(
         Modifier
             .fillMaxSize()
@@ -80,20 +99,6 @@ fun Home(
                 )
                 Spacer(Modifier.height(22.dp))
             }
-            val mockCards = listOf(
-                CardFaceData(
-                    topTitle = "DAILY RECOMMEND",
-                    title = "每日推荐歌曲",
-                    subTitle = "根据你的音乐口味生成，每天6:00更新",
-                    backgroundGradient = listOf(Color(0xFFFF512F), Color(0xFFDD2476))
-                ),
-                CardFaceData(
-                    topTitle = "PERSONAL FM",
-                    title = "私人 FM",
-                    subTitle = "最懂你的音乐电台，随时随地",
-                    backgroundGradient = listOf(Color(0xFF1CB5E0), Color(0xFF000851))
-                )
-            )
 
             items(mockCards.size) { index ->
                 val card = mockCards[index]

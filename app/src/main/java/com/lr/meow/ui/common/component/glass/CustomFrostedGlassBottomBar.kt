@@ -61,6 +61,7 @@ import com.lr.glassui.model.GlassEnvironment
 import com.lr.meow.data.navigation.MyNavTab
 import com.lr.meow.data.navigation.myNavTabs
 import com.lr.meow.ui.theme.LocalIsMusicPlaying
+import androidx.compose.ui.res.stringResource
 
 @SuppressLint("RestrictedApi")
 @Composable
@@ -201,7 +202,8 @@ fun CustomFrostedGlassBottomBar(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        tabs.forEach { (tabTarget, outlinedIcon, icon, name) ->
+                        tabs.forEach { (tabTarget, outlinedIcon, icon, labelResId) ->
+                            val name = stringResource(id = labelResId)
                             val isSelected = currentTab == tabTarget
                             val interactionSource = remember { MutableInteractionSource() }
                             // 环境感知与反色配色

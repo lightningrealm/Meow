@@ -33,6 +33,9 @@ import kotlinx.coroutines.launch
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.modifier.SharedElement
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,14 +100,14 @@ fun PlaylistDetail(
                             )
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                text = "播放全部",
+                                text = stringResource(id = R.string.play_all),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colorScheme.onBackground
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = "(共 ${detail.trackCount} 首)",
+                                text = stringResource(id = R.string.song_count_format, detail.trackCount),
                                 fontSize = 14.sp,
                                 color = colorScheme.onBackground.copy(alpha = 0.5f)
                             )
@@ -122,7 +125,7 @@ fun PlaylistDetail(
                     item {
                         Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                             Text(
-                                text = uiState.errorMessage ?: "Failed to load playlist",
+                                text = uiState.errorMessage?.asString() ?: stringResource(id = R.string.load_failed),
                                 color = colorScheme.error
                             )
                         }
@@ -148,7 +151,7 @@ fun PlaylistDetail(
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = song.name ?: "未知歌曲",
+                                text = song.name ?: stringResource(id = R.string.unknown_song),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = colorScheme.onBackground,
@@ -157,7 +160,7 @@ fun PlaylistDetail(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "${song.artistName} - ${song.al?.name ?: "Unknown Album"}",
+                                text = "${song.artistName} - ${song.al?.name ?: stringResource(id = R.string.unknown_album)}",
                                 fontSize = 12.sp,
                                 color = colorScheme.onBackground.copy(alpha = 0.6f),
                                 maxLines = 1,
@@ -210,7 +213,7 @@ fun PlaylistDetail(
 
                 // Top Bar
                 TopAppBar(
-                    title = { Text("歌单", color = Color.White) },
+                    title = { Text(stringResource(id = R.string.playlist), color = Color.White) },
                     navigationIcon = {
                         IconButton(onClick = {
                             cardAnimState.prepareCollapse()

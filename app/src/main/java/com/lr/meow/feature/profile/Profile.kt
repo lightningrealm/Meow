@@ -38,6 +38,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -256,7 +259,7 @@ fun Profile(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "最近播放 - 歌曲",
+                                text = stringResource(id = R.string.recent_songs),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colorScheme.onBackground
@@ -298,7 +301,7 @@ fun Profile(
                                             )
                                             Spacer(Modifier.height(8.dp))
                                             Text(
-                                                text = song.name ?: "未知歌曲",
+                                                text = song.name ?: stringResource(id = R.string.unknown_song),
                                                 fontSize = 14.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = colorScheme.onBackground,
@@ -333,7 +336,7 @@ fun Profile(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "最近播放 - 歌单",
+                                text = stringResource(id = R.string.recent_playlists),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colorScheme.onBackground

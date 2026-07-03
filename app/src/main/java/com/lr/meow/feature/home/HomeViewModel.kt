@@ -9,11 +9,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import com.lr.meow.ui.common.util.UiText
+import com.lr.meow.R
+
 data class HomeUiState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val needsLogin: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     val recommendSongs: List<RecommendSong> = emptyList(),
     val personalFmSongs: List<RecommendSong> = emptyList()
 )
@@ -75,7 +78,11 @@ class HomeViewModel(
             isLoading = false,
             isError = true,
             needsLogin = isAuthError,
-            errorMessage = if (isAuthError) "登录已过期，请重新登录" else e.localizedMessage
+            errorMessage = if (isAuthError) {
+                UiText.StringResource(R.string.login_expired)
+            } else {
+                e.localizedMessage?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.load_failed)
+            }
         )
     }
 

@@ -38,6 +38,9 @@ import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.components.shimmerEffect
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.lr.meow.R
+
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -79,14 +82,14 @@ fun Discover(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = if (uiState.needsLogin) "登录已过期，请重新登录" else "登录后发现更多好音乐",
+                    text = if (uiState.needsLogin) stringResource(id = R.string.login_expired) else stringResource(id = R.string.login_to_discover),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
                 Button(onClick = { requireAuth() }) {
-                    Text(if (uiState.needsLogin) "重新登录" else "立即登录")
+                    Text(if (uiState.needsLogin) stringResource(id = R.string.relogin) else stringResource(id = R.string.login_now))
                 }
             }
         } else if (uiState.isLoading && uiState.recommendPlaylists.isEmpty()) {
@@ -97,12 +100,12 @@ fun Discover(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = uiState.errorMessage ?: "加载失败",
+                    text = uiState.errorMessage?.asString() ?: stringResource(id = R.string.load_failed),
                     color = colorScheme.error,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 Button(onClick = { viewModel.fetchRecommendations() }) {
-                    Text("重试")
+                    Text(stringResource(id = R.string.retry))
                 }
             }
         } else {
@@ -113,7 +116,7 @@ fun Discover(
                 item {
                     Spacer(Modifier.statusBarsPadding())
                     Text(
-                        text = "发现",
+                        text = stringResource(id = R.string.nav_discover),
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Bold,
                         color = colorScheme.onBackground,
@@ -125,7 +128,7 @@ fun Discover(
                     item {
                         Column {
                             Text(
-                                text = "推荐歌单",
+                                text = stringResource(id = R.string.recommend_playlist),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colorScheme.onBackground,
@@ -192,7 +195,7 @@ fun Discover(
                     item {
                         Column {
                             Text(
-                                text = "官方榜单",
+                                text = stringResource(id = R.string.official_charts),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colorScheme.onBackground,
@@ -240,7 +243,7 @@ fun Discover(
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
-                                            text = toplist.name ?: "未知榜单",
+                                            text = toplist.name ?: stringResource(id = R.string.unknown_chart),
                                             color = colorScheme.onBackground,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,
@@ -259,7 +262,7 @@ fun Discover(
                     item {
                         Column {
                             Text(
-                                text = "新碟首发",
+                                text = stringResource(id = R.string.new_albums),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colorScheme.onBackground,
@@ -287,7 +290,7 @@ fun Discover(
                                         )
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
-                                            text = album.name ?: "未知专辑",
+                                            text = album.name ?: stringResource(id = R.string.unknown_album),
                                             color = colorScheme.onBackground,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,
@@ -296,7 +299,7 @@ fun Discover(
                                         )
                                         album.artist?.let { artist ->
                                             Text(
-                                                text = artist.name ?: "未知歌手",
+                                                text = artist.name ?: stringResource(id = R.string.unknown_artist),
                                                 color = colorScheme.onSurfaceVariant,
                                                 fontSize = 12.sp,
                                                 maxLines = 1,
@@ -314,7 +317,7 @@ fun Discover(
                     item {
                         Column {
                             Text(
-                                text = "热门歌手",
+                                text = stringResource(id = R.string.hot_artists),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colorScheme.onBackground,
@@ -343,7 +346,7 @@ fun Discover(
                                         )
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
-                                            text = artist.name ?: "未知歌手",
+                                            text = artist.name ?: stringResource(id = R.string.unknown_artist),
                                             color = colorScheme.onBackground,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,

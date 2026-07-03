@@ -64,7 +64,10 @@ data class SearchSong(
     @SerialName("dt") val duration: Long? = null
 ) {
     val artistName: String
-        get() = ar?.joinToString("/") { it.name ?: "未知歌手" } ?: "未知歌手"
+        get() {
+            val fallback = if (java.util.Locale.getDefault().language == "zh") "未知歌手" else "Unknown Artist"
+            return ar?.joinToString("/") { it.name ?: fallback } ?: fallback
+        }
 }
 
 @Serializable
