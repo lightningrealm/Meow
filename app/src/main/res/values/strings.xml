@@ -70,4 +70,11 @@
     <string name="search_history">History</string>
     <string name="clear_history">Clear History</string>
     <string name="hot_searches">Hot Searches</string>
+    
+    <string name="discover_more_music">Discover More Music</string>
+    <string name="login_profile_hint">Login to access your profile and library</string>
+    <string name="logout">Logout</string>
+    <string name="followers_count">%1$d Followers</string>
+    <string name="following_count">%1$d Following</string>
+    <string name="guest">Guest</string>
 </resources>

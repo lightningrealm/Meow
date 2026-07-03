@@ -122,14 +122,14 @@ fun Profile(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Discover More Music",
+                    text = stringResource(id = R.string.discover_more_music),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = colorScheme.onBackground
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Login to access your profile and library",
+                    text = stringResource(id = R.string.login_profile_hint),
                     fontSize = 14.sp,
                     color = colorScheme.onBackground.copy(alpha = 0.6f)
                 )
@@ -143,7 +143,7 @@ fun Profile(
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.padding(horizontal = 32.dp).height(48.dp)
                 ) {
-                    Text("Login Now", fontWeight = FontWeight.Bold)
+                    Text(stringResource(id = R.string.login_now), fontWeight = FontWeight.Bold)
                 }
             }
         } else if (uiState.isLoading && uiState.userProfile == null) {
@@ -201,8 +201,10 @@ fun Profile(
                             )
                         }
                         Spacer(Modifier.height(16.dp))
+                        val nickname = uiState.userProfile?.nickname
+                        val guestStr = stringResource(id = R.string.guest)
                         Text(
-                            text = uiState.userProfile?.nickname ?: "Guest",
+                            text = if (nickname.isNullOrBlank()) guestStr else nickname,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = colorScheme.onBackground
@@ -213,12 +215,12 @@ fun Profile(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${uiState.followerCount ?: 0} Followers",
+                                text = stringResource(id = R.string.followers_count, uiState.followerCount ?: 0),
                                 fontSize = 14.sp,
                                 color = colorScheme.onBackground.copy(alpha = 0.6f)
                             )
                             Text(
-                                text = "${uiState.followingCount ?: 0} Following",
+                                text = stringResource(id = R.string.following_count, uiState.followingCount ?: 0),
                                 fontSize = 14.sp,
                                 color = colorScheme.onBackground.copy(alpha = 0.6f)
                             )
@@ -239,7 +241,7 @@ fun Profile(
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier.padding(horizontal = 32.dp).height(48.dp)
                         ) {
-                            Text("Logout", fontWeight = FontWeight.Bold)
+                            Text(stringResource(id = R.string.logout), fontWeight = FontWeight.Bold)
                         }
                     }
                     Spacer(Modifier.height(32.dp))
