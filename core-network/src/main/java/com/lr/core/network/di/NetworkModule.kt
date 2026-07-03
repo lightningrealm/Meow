@@ -78,4 +78,8 @@ val networkModule = module {
     single {
         get<Retrofit>().create(MeowPlaylistService::class.java)
     }
+
+    single {
+        get<Retrofit>().create(com.lr.core.network.api.MeowSongService::class.java)
+    }
 }

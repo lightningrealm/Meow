@@ -70,5 +70,5 @@ data class PlaylistTracksResponse(
     @SerialName("code")
     val code: Int,
     @SerialName("songs")
-    val songs: List<RecommendSong>? = null
+    val songs: List<Song>? = null
 )

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lr.core.network.api.MeowRecommendService
 import com.lr.core.network.model.RecommendPlaylist
-import com.lr.core.network.model.RecommendSong
+import com.lr.core.network.model.Song
 import com.lr.core.network.model.Toplist
 import com.lr.core.network.model.Album
 import com.lr.core.network.model.Artist

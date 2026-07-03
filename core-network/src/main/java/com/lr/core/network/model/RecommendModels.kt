@@ -5,6 +5,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
+import java.util.Locale
 
 @Serializable
 data class RecommendResourceResponse(
@@ -43,7 +44,7 @@ data class RecommendSongsResponse(
 @Serializable
 data class RecommendSongsData(
     @SerialName("dailySongs")
-    val dailySongs: List<RecommendSong>? = null
+    val dailySongs: List<Song>? = null
 )
 
 @Serializable
@@ -51,7 +52,7 @@ data class PersonalFmResponse(
     @SerialName("code")
     val code: Int,
     @SerialName("data")
-    val data: List<RecommendSong>? = null
+    val data: List<Song>? = null
 )
 
 @Serializable
@@ -59,11 +60,11 @@ data class DislikeSongResponse(
     @SerialName("code")
     val code: Int,
     @SerialName("data")
-    val data: RecommendSong? = null
+    val data: Song? = null
 )
 
 @Serializable
-data class RecommendSong(
+data class Song(
     @SerialName("id")
     val id: Long,
     @SerialName("name")
@@ -79,7 +80,7 @@ data class RecommendSong(
 ) {
     val artistName: String
         get() {
-            val fallback = if (java.util.Locale.getDefault().language == "zh") "未知歌手" else "Unknown Artist"
+            val fallback = if (Locale.getDefault().language == "zh") "未知歌手" else "Unknown Artist"
             return ar?.joinToString("/") { it.name ?: fallback } ?: fallback
         }
 }

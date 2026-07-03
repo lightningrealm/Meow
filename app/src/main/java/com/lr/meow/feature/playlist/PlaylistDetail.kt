@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,6 +53,7 @@ import coil3.request.crossfade
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.modifier.SharedElementTarget
 import com.lr.meow.R
+import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import kotlinx.coroutines.launch
@@ -65,9 +65,10 @@ import org.koin.androidx.compose.koinViewModel
 fun PlaylistDetail(
     playlistId: Long,
     coverImgUrl: String? = null,
-    onBack: () -> Unit,
-    viewModel: PlaylistDetailViewModel = koinViewModel()
+    onBack: () -> Unit
 ) {
+    val viewModel: PlaylistDetailViewModel = koinViewModel()
+    val playerViewModel: PlayerViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
 
@@ -110,7 +111,11 @@ fun PlaylistDetail(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .bouncyClickable { viewModel.handleIntent(PlaylistDetailIntent.PlayAll) }
+                                .bouncyClickable {
+                                    if (songs.isNotEmpty()) {
+                                        playerViewModel.playSongs(songs, 0)
+                                    }
+                                }
                                 .padding(horizontal = 20.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -160,7 +165,9 @@ fun PlaylistDetail(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .bouncyClickable { viewModel.handleIntent(PlaylistDetailIntent.PlaySong(song)) }
+                            .bouncyClickable {
+                                playerViewModel.playSongs(songs, index)
+                            }
                             .padding(horizontal = 20.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {

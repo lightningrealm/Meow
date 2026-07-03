@@ -1,6 +1,5 @@
 package com.lr.meow.ui.theme
 
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -12,4 +11,4 @@ val LocalBottomBarPadding = compositionLocalOf {
 
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
 val LocalRootGraphicsLayer = compositionLocalOf<GraphicsLayer?>{ null }
-val LocalIsMusicPlaying = compositionLocalOf { true }
+val LocalIsMusicPlaying = compositionLocalOf { false }

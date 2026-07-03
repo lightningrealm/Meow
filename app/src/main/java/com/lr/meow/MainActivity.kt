@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,6 +57,7 @@ import com.lr.meow.feature.home.HomeDetail
 import com.lr.meow.feature.library.Library
 import com.lr.meow.feature.login.Login
 import com.lr.meow.feature.player.PlayerScreen
+import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.feature.playlist.PlaylistDetail
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.profile.SharedUserIntent
@@ -92,7 +92,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RootView(
     viewModel: MainViewModel = koinViewModel(),
-    sharedUserViewModel: SharedUserViewModel = koinViewModel()
+    sharedUserViewModel: SharedUserViewModel = koinViewModel(),
+    playerViewModel: PlayerViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -143,15 +144,17 @@ fun RootView(
     }
 
     var showPlayerScreen by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    val configuration = LocalConfiguration.current
-    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
-    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
-    Box(
-        Modifier.fillMaxSize()
+    val currentSong by playerViewModel.currentMediaItem.collectAsState()
+    val isMusicPlayingState = currentSong != null
+
+    CompositionLocalProvider(
+        LocalIsMusicPlaying provides isMusicPlayingState
     ) {
-        val backgroundLayer = LocalRootGraphicsLayer.current!!
+        Box(
+            Modifier.fillMaxSize()
+        ) {
+            val backgroundLayer = LocalRootGraphicsLayer.current!!
         
         CardAnimRoot(
             state = cardAnimState,
@@ -301,6 +304,7 @@ fun RootView(
             showBottomSheet = uiState.showLoginSheet,
             onDismissRequest = { viewModel.dispatch(MainIntent.DismissLogin) }
         )
+        }
     }
 }
 

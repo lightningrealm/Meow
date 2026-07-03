@@ -1,7 +1,7 @@
 package com.lr.meow.feature.playlist
 
 import com.lr.core.network.model.PlaylistDetail
-import com.lr.core.network.model.RecommendSong
+import com.lr.core.network.model.Song
 import com.lr.meow.ui.common.util.UiText
 
 data class PlaylistDetailUiState(
@@ -9,11 +9,11 @@ data class PlaylistDetailUiState(
     val isError: Boolean = false,
     val errorMessage: UiText? = null,
     val playlistDetail: PlaylistDetail? = null,
-    val songs: List<RecommendSong> = emptyList()
+    val songs: List<Song> = emptyList()
 )
 
 sealed class PlaylistDetailIntent {
     data class LoadPlaylist(val id: Long) : PlaylistDetailIntent()
-    data class PlaySong(val song: RecommendSong) : PlaylistDetailIntent()
+    data class PlaySong(val song: Song) : PlaylistDetailIntent()
     object PlayAll : PlaylistDetailIntent()
 }

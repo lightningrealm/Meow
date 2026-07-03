@@ -3,7 +3,8 @@ package com.lr.meow.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lr.core.network.api.MeowRecommendService
-import com.lr.core.network.model.RecommendSong
+import com.lr.core.network.model.RecommendPlaylist
+import com.lr.core.network.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,8 +18,9 @@ data class HomeUiState(
     val isError: Boolean = false,
     val needsLogin: Boolean = false,
     val errorMessage: UiText? = null,
-    val recommendSongs: List<RecommendSong> = emptyList(),
-    val personalFmSongs: List<RecommendSong> = emptyList()
+    val recommendPlaylists: List<RecommendPlaylist> = emptyList(),
+    val recommendSongs: List<Song> = emptyList(),
+    val personalFmSongs: List<Song> = emptyList()
 )
 
 class HomeViewModel(

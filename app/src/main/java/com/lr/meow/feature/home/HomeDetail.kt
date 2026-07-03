@@ -77,11 +77,13 @@ import com.lr.meow.ui.components.shimmerEffect
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import com.lr.meow.feature.player.PlayerViewModel
 
 @Composable
 fun HomeDetail(
     id: Int,
     viewModel: HomeViewModel = koinViewModel(),
+    playerViewModel: PlayerViewModel = koinViewModel(),
     onBack: () -> Unit = {}
 ) {
     val cardAnimState = LocalCardAnimState.current
@@ -168,6 +170,7 @@ fun HomeDetail(
                 // Daily Recommend Detail
                 DailyRecommendContent(
                     viewModel = viewModel,
+                    playerViewModel = playerViewModel,
                     uiState = uiState,
                     isLoggedIn = isLoggedIn,
                     requireAuth = requireAuth,
@@ -200,6 +203,7 @@ fun HomeDetail(
 @Composable
 private fun DailyRecommendContent(
     viewModel: HomeViewModel,
+    playerViewModel: PlayerViewModel,
     uiState: HomeUiState,
     isLoggedIn: Boolean,
     requireAuth: () -> Unit,
@@ -291,7 +295,12 @@ private fun DailyRecommendContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateItem()
-                        .bouncyClickable { /* TODO: Play song */ }
+                        .bouncyClickable {
+                            val index = uiState.recommendSongs.indexOf(song)
+                            if (index >= 0) {
+                                playerViewModel.playSongs(uiState.recommendSongs, index)
+                            }
+                        }
                         .background(colorScheme.surface.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                         .padding(horizontal = 12.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically

@@ -160,7 +160,7 @@ data class RecentSongItem(
     @SerialName("playTime")
     val playTime: Long,
     @SerialName("data")
-    val song: RecommendSong
+    val song: Song
 )
 
 @Serializable
