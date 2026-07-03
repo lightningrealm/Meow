@@ -6,10 +6,21 @@ import com.lr.core.network.api.MeowSongService
 import com.lr.core.network.model.Song
 import com.lr.core_player.MusicController
 import com.lr.meow.feature.player.mapper.toMediaItem
+import com.lr.meow.feature.player.model.LyricLine
+import com.lr.meow.feature.player.model.parseLrc
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
+
+sealed interface LyricUiState {
+    data object Loading : LyricUiState
+    data class Success(val lyrics: List<LyricLine>) : LyricUiState
+    data class Error(val message: String) : LyricUiState
+}
 
 class PlayerViewModel(
     private val musicController: MusicController,
@@ -30,6 +41,8 @@ class PlayerViewModel(
 
     val duration = musicController.duration
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
+    private val _lyricState = MutableStateFlow<LyricUiState>(LyricUiState.Loading)
+    val lyricState: StateFlow<LyricUiState> = _lyricState.asStateFlow()
 
     init {
         musicController.initialize()
@@ -39,6 +52,29 @@ class PlayerViewModel(
                     musicController.updateProgress()
                 }
                 kotlinx.coroutines.delay(500.milliseconds)
+            }
+        }
+        
+        viewModelScope.launch {
+            currentMediaItem.collect { mediaItem ->
+                if (mediaItem != null) {
+                    _lyricState.value = LyricUiState.Loading
+                    try {
+                        val songId = mediaItem.mediaId
+                        val response = songService.getLyric(songId)
+                        if (response.code == 200) {
+                            val parsed = parseLrc(response.lrc?.lyric)
+                            _lyricState.value = LyricUiState.Success(parsed)
+                        } else {
+                            _lyricState.value = LyricUiState.Error("获取歌词失败")
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        _lyricState.value = LyricUiState.Error(e.message ?: "未知错误")
+                    }
+                } else {
+                    _lyricState.value = LyricUiState.Success(emptyList())
+                }
             }
         }
     }

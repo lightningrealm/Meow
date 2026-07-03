@@ -3,15 +3,12 @@ package com.lr.meow.feature.player
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,19 +21,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,13 +45,25 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.gestures.detectDragGestures
 import coil3.compose.AsyncImage
 import com.lr.glassui.model.GlassEnvironment
 import com.lr.meow.R
-import com.lr.meow.ui.common.component.MeowSlider
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.animation.scaleIn
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.scaleOut
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import com.lr.meow.ui.common.component.MeowSlider
 
 private fun Long.formatTime(): String {
     val totalSeconds = this / 1000
@@ -143,6 +150,7 @@ fun PlayerScreen(
             val isPlaying by viewModel.isPlaying.collectAsState()
             val currentPosition by viewModel.currentPosition.collectAsState()
             val duration by viewModel.duration.collectAsState()
+            val lyricState by viewModel.lyricState.collectAsState()
 
             // Big Cover or Lyrics
             AnimatedContent(
@@ -160,12 +168,76 @@ fun PlayerScreen(
                             .padding(horizontal = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "歌词功能开发中...",
-                            color = targetColor,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        when (val state = lyricState) {
+                            is LyricUiState.Loading -> {
+                                CircularProgressIndicator(color = targetColor)
+                            }
+                            is LyricUiState.Error -> {
+                                Text(
+                                    text = state.message,
+                                    color = targetColor,
+                                    fontSize = 18.sp
+                                )
+                            }
+                            is LyricUiState.Success -> {
+                                val lyrics = state.lyrics
+                                if (lyrics.isEmpty()) {
+                                    Text(
+                                        text = "纯音乐，请欣赏",
+                                        color = targetColor,
+                                        fontSize = 18.sp
+                                    )
+                                } else {
+                                    val listState = rememberLazyListState()
+                                    
+                                    val activeIndex = remember(lyrics, currentPosition) {
+                                        val idx = lyrics.indexOfLast { it.startTimeMs <= currentPosition }
+                                        if (idx == -1) 0 else idx
+                                    }
+
+                                    androidx.compose.runtime.LaunchedEffect(activeIndex) {
+                                        if (activeIndex >= 0) {
+                                            listState.animateScrollToItem(
+                                                index = maxOf(0, activeIndex - 3),
+                                                scrollOffset = 0
+                                            )
+                                        }
+                                    }
+
+                                    LazyColumn(
+                                        state = listState,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 120.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        items(lyrics.size) { index ->
+                                            val line = lyrics[index]
+                                            val isActive = index == activeIndex
+                                            val color by animateColorAsState(
+                                                targetValue = if (isActive) targetColor else targetColor.copy(alpha = 0.5f),
+                                                animationSpec = tween(300)
+                                            )
+                                            val scale by animateFloatAsState(
+                                                targetValue = if (isActive) 1.25f else 1f, // 16sp -> 20sp ratio
+                                                animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                            )
+                                            Text(
+                                                text = line.text,
+                                                color = color,
+                                                fontSize = 16.sp,
+                                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.graphicsLayer {
+                                                    scaleX = scale
+                                                    scaleY = scale
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 } else {
                     Box(
