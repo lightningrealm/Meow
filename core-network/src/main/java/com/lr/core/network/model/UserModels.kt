@@ -28,16 +28,35 @@ data class UserProfile(
 
 /**
  * /user/account 接口的响应
+ * New API wraps account/profile inside a "data" field.
+ * We support both: top-level and nested structures.
  */
 @Serializable
 data class UserAccountResponse(
     @SerialName("code")
-    val code: Int,
+    val code: Int = 0,
+    @SerialName("data")
+    val data: UserAccountData? = null,
+    // Legacy: some API versions return profile/account at top level
     @SerialName("profile")
-    val profile: UserProfile? = null,
+    val profileLegacy: UserProfile? = null,
     @SerialName("account")
-    val account: AccountInfo? = null
+    val accountLegacy: AccountInfo? = null
 ) {
+    // Convenience accessors that check both locations
+    val profile: UserProfile? get() = data?.profile ?: profileLegacy
+    val account: AccountInfo? get() = data?.account ?: accountLegacy
+
+    @Serializable
+    data class UserAccountData(
+        @SerialName("code")
+        val code: Int = 0,
+        @SerialName("account")
+        val account: AccountInfo? = null,
+        @SerialName("profile")
+        val profile: UserProfile? = null
+    )
+
     @Serializable
     data class AccountInfo(
         @SerialName("id")
@@ -47,7 +66,9 @@ data class UserAccountResponse(
         @SerialName("createTime")
         val createTime: Long? = null,
         @SerialName("status")
-        val status: Int? = null
+        val status: Int? = null,
+        @SerialName("anonimousUser")
+        val anonimousUser: Boolean = false
     )
 }
 

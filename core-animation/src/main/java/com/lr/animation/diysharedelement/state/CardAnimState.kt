@@ -100,6 +100,25 @@ class CardAnimState(
     }
 
     /**
+     * 在 detail 页面渲染完成后，用真实的 bounds 更新 session 的 targetTransform。
+     * 不影响 boundsMap（boundsMap 只给 source 注册用），collapse 时仍从 boundsMap 读取 source。
+     */
+    fun updateTarget(cardId: String, realBounds: IntRect, cornerRadiusPx: Float) {
+        val s = session ?: return
+        if (s.cardAnimId != cardId) return
+        if (phase == CardAnimPhase.IDLE) return
+        session = s.copy(
+            targetTransform = CardAnimTransform(
+                x = realBounds.left.toFloat(),
+                y = realBounds.top.toFloat(),
+                width = realBounds.width.toFloat(),
+                height = realBounds.height.toFloat(),
+                cornerRadius = cornerRadiusPx
+            )
+        )
+    }
+
+    /**
      * 同步：刷新 source bounds、设置 phase = COLLAPSING。
      * 在 onBack 之前调用，overlay 立即变为可见，防止页面闪现。
      */

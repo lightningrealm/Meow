@@ -150,7 +150,7 @@ class SharedUserViewModel(
                 // To fetch details, we first need to know the UID.
                 // The /user/account endpoint tells us the currently logged-in user's profile and ID.
                 val accountResponse = userService.getUserAccount()
-                val uid = accountResponse.profile?.userId
+                val uid = accountResponse.profile?.userId ?: accountResponse.account?.id
 
                 if (uid == null) {
                     _isLoading.value = false
@@ -163,34 +163,34 @@ class SharedUserViewModel(
                 // Removed _currentUid.value = uid
 
                 // Now we can fetch details, level, subcount and playlists concurrently
-                val detailDeferred = async { userService.getUserDetail(uid) }
-                val levelDeferred = async { userService.getUserLevel() }
-                val subcountDeferred = async { userService.getUserSubcount() }
-                val playlistsDeferred = async { userService.getUserPlaylists(uid, limit = 1000) }
+                val detailDeferred = async { try { userService.getUserDetail(uid) } catch (e: Exception) { null } }
+                val levelDeferred = async { try { userService.getUserLevel() } catch (e: Exception) { null } }
+                val subcountDeferred = async { try { userService.getUserSubcount() } catch (e: Exception) { null } }
+                val playlistsDeferred = async { try { userService.getUserPlaylists(uid, limit = 1000) } catch (e: Exception) { null } }
 
                 val detail = detailDeferred.await()
                 val level = levelDeferred.await()
                 val subcount = subcountDeferred.await()
                 val playlistsResponse = playlistsDeferred.await()
                 
-                val finalProfile = detail.profile ?: accountResponse.profile
+                val finalProfile = detail?.profile ?: accountResponse.profile
 
                 // Save Playlists
-                val playlists = playlistsResponse.playlist ?: emptyList()
+                val playlists = playlistsResponse?.playlist ?: emptyList()
                 profileStorage.savePlaylistsJson(gson.toJson(playlists))
 
                 // Save to DataStore
                 profileStorage.saveProfile(
                     CachedProfile(
                         userId = uid,
-                        nickname = finalProfile?.nickname,
+                        nickname = finalProfile?.nickname ?: accountResponse.account?.userName,
                         avatarUrl = finalProfile?.avatarUrl,
                         backgroundUrl = finalProfile?.backgroundUrl,
-                        level = level.data?.level,
-                        listenSongs = detail.listenSongs,
+                        level = level?.data?.level,
+                        listenSongs = detail?.listenSongs,
                         followerCount = finalProfile?.followeds,
                         followingCount = finalProfile?.follows,
-                        playlistCount = subcount.createdPlaylistCount
+                        playlistCount = subcount?.createdPlaylistCount
                     )
                 )
 

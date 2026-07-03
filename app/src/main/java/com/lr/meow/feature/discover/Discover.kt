@@ -39,6 +39,8 @@ import com.lr.meow.ui.components.shimmerEffect
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
+import com.lr.animation.diysharedelement.modifier.SharedElement
 import com.lr.meow.R
 
 import org.koin.androidx.compose.koinViewModel
@@ -53,8 +55,7 @@ fun Discover(
     val requireAuth = LocalRequireAuth.current
     val uiState by viewModel.uiState.collectAsState()
 
-    val cardAnimState = com.lr.animation.diysharedelement.component.LocalCardAnimState.current
-    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    val cardAnimState = LocalCardAnimState.current
 
     val density = androidx.compose.ui.platform.LocalDensity.current
     val targetSizePx = with(density) { 120.dp.toPx() }
@@ -158,7 +159,7 @@ fun Discover(
                                                 }
                                             }
                                     ) {
-                                        com.lr.animation.diysharedelement.modifier.SharedElement(
+                                        SharedElement(
                                             cardId = "playlist_cover_${playlist.id}",
                                             modifier = Modifier
                                                 .width(140.dp)
