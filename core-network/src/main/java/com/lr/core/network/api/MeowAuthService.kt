@@ -1,10 +1,16 @@
 package com.lr.core.network.api
 
+import com.lr.core.network.model.AnonymousLoginResponse
 import com.lr.core.network.model.BaseResponse
 import com.lr.core.network.model.CaptchaSentResponse
 import com.lr.core.network.model.LoginResponse
+import com.lr.core.network.model.LoginStatusResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
+import com.lr.core.network.model.QrKeyResponse
+import com.lr.core.network.model.QrCreateResponse
+import com.lr.core.network.model.QrCheckResponse
+import com.lr.core.network.model.RefreshLoginResponse
 
 interface MeowAuthService {
     
@@ -41,17 +47,46 @@ interface MeowAuthService {
      * 刷新登录状态
      */
     @GET("login/refresh")
-    suspend fun refreshLogin(): BaseResponse<Any>
+    suspend fun refreshLogin(): RefreshLoginResponse
     
     /**
      * 获取登录状态
      */
     @GET("login/status")
-    suspend fun checkLoginStatus(): com.lr.core.network.model.LoginStatusResponse
+    suspend fun checkLoginStatus(): LoginStatusResponse
     
+
     /**
      * 游客登录
      */
     @GET("register/anonimous")
-    suspend fun anonymousLogin(): BaseResponse<Any>
+    suspend fun anonymousLogin(): AnonymousLoginResponse
+
+    /**
+     * 生成二维码 key
+     */
+    @GET("login/qr/key")
+    suspend fun getQrKey(
+        @Query("timestamp") timestamp: Long = System.currentTimeMillis()
+    ): QrKeyResponse
+
+    /**
+     * 生成二维码 base64
+     */
+    @GET("login/qr/create")
+    suspend fun createQrCode(
+        @Query("key") key: String,
+        @Query("qrimg") qrimg: Boolean = true,
+        @Query("timestamp") timestamp: Long = System.currentTimeMillis()
+    ): QrCreateResponse
+
+    /**
+     * 轮询二维码扫码状态
+     */
+    @GET("login/qr/check")
+    suspend fun checkQrStatus(
+        @Query("key") key: String,
+        @Query("noCookie") noCookie: Boolean = true,
+        @Query("timestamp") timestamp: Long = System.currentTimeMillis()
+    ): QrCheckResponse
 }

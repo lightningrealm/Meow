@@ -13,11 +13,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pets
 import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.QrCode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -129,77 +134,162 @@ private fun LoginContent(viewModel: LoginViewModel, onDismissRequest: () -> Unit
 
         Spacer(modifier = Modifier.height(36.dp))
 
-        // 3. 手机号输入框
-        ModernTextField(
-            value = uiState.phone,
-            onValueChange = { viewModel.updatePhone(it) },
-            placeholder = stringResource(id = R.string.phone_number),
-            icon = Icons.Rounded.Phone,
-            keyboardType = KeyboardType.Phone
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 4. 验证码输入框 (利用 trailingIcon 完美解决文字重叠问题)
-        ModernTextField(
-            value = uiState.captcha,
-            onValueChange = { viewModel.updateCaptcha(it) },
-            placeholder = stringResource(id = R.string.verification_code),
-            icon = Icons.Rounded.Lock,
-            keyboardType = KeyboardType.Number,
-            trailingContent = {
-                TextButton(
-                    onClick = { viewModel.sendCaptcha() },
-                    enabled = uiState.countdownSeconds == 0 && !uiState.isSendingCode,
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp)
-                ) {
-                    Text(
-                        text = if (uiState.countdownSeconds > 0) "${uiState.countdownSeconds}s" else stringResource(id = R.string.get_captcha),
-                        color = if (uiState.countdownSeconds > 0 || uiState.isSendingCode)
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        else
-                            MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        )
-
-        Spacer(modifier = Modifier.height(36.dp))
-
-        // 5. 登录主按钮 (增加丝滑的 Loading 动画)
-        Button(
-            onClick = { viewModel.login() },
-            enabled = !uiState.isLoggingIn && uiState.phone.isNotEmpty() && uiState.captcha.isNotEmpty(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = CircleShape, // 大圆角更具现代感
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            AnimatedContent(
-                targetState = uiState.isLoggingIn,
-                transitionSpec = {
-                    (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
-                        .using(SizeTransform(clip = false))
-                },
-                label = "login_button_anim"
-            ) { isLoggingIn ->
-                if (isLoggingIn) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.5.dp
+            val isQr = uiState.loginMode == LoginMode.QR_CODE
+            FilterChip(
+                selected = !isQr,
+                onClick = { viewModel.setLoginMode(LoginMode.PHONE) },
+                label = { Text("验证码登录") },
+                leadingIcon = { if (!isQr) Icon(Icons.Rounded.Phone, contentDescription = null, modifier = Modifier.size(16.dp)) }
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            FilterChip(
+                selected = isQr,
+                onClick = { viewModel.setLoginMode(LoginMode.QR_CODE) },
+                label = { Text("二维码登录") },
+                leadingIcon = { if (isQr) Icon(Icons.Rounded.QrCode, contentDescription = null, modifier = Modifier.size(16.dp)) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        AnimatedContent(
+            targetState = uiState.loginMode,
+            transitionSpec = {
+                (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
+            },
+            label = "login_mode_anim"
+        ) { mode ->
+            if (mode == LoginMode.PHONE) {
+                Column {
+                    // 3. 手机号输入框
+                    ModernTextField(
+                        value = uiState.phone,
+                        onValueChange = { viewModel.updatePhone(it) },
+                        placeholder = stringResource(id = R.string.phone_number),
+                        icon = Icons.Rounded.Phone,
+                        keyboardType = KeyboardType.Phone
                     )
-                } else {
+            
+                    Spacer(modifier = Modifier.height(16.dp))
+            
+                    // 4. 验证码输入框 (利用 trailingIcon 完美解决文字重叠问题)
+                    ModernTextField(
+                        value = uiState.captcha,
+                        onValueChange = { viewModel.updateCaptcha(it) },
+                        placeholder = stringResource(id = R.string.verification_code),
+                        icon = Icons.Rounded.Lock,
+                        keyboardType = KeyboardType.Number,
+                        trailingContent = {
+                            TextButton(
+                                onClick = { viewModel.sendCaptcha() },
+                                enabled = uiState.countdownSeconds == 0 && !uiState.isSendingCode,
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp)
+                            ) {
+                                Text(
+                                    text = if (uiState.countdownSeconds > 0) "${uiState.countdownSeconds}s" else stringResource(id = R.string.get_captcha),
+                                    color = if (uiState.countdownSeconds > 0 || uiState.isSendingCode)
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    else
+                                        MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    )
+            
+                    Spacer(modifier = Modifier.height(36.dp))
+            
+                    // 5. 登录主按钮 (增加丝滑的 Loading 动画)
+                    Button(
+                        onClick = { viewModel.login() },
+                        enabled = !uiState.isLoggingIn && uiState.phone.isNotEmpty() && uiState.captcha.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = CircleShape, // 大圆角更具现代感
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        AnimatedContent(
+                            targetState = uiState.isLoggingIn,
+                            transitionSpec = {
+                                (fadeIn() + slideInVertically { it / 2 }).togetherWith(fadeOut() + slideOutVertically { -it / 2 })
+                                    .using(SizeTransform(clip = false))
+                            },
+                            label = "login_button_anim"
+                        ) { isLoggingIn ->
+                            if (isLoggingIn) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.5.dp
+                                )
+                            } else {
+                                Text(
+                                    text = stringResource(id = R.string.sign_in),
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally, 
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(modifier = Modifier.size(200.dp), contentAlignment = Alignment.Center) {
+                        val base64 = uiState.qrImgBase64
+                        if (base64 != null) {
+                            val bitmap = remember(base64) {
+                                try {
+                                    val cleanBase64 = base64.substringAfter("base64,")
+                                    val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap()
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            }
+                            
+                            if (bitmap != null) {
+                                Image(
+                                    bitmap = bitmap,
+                                    contentDescription = "QR Code",
+                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                                )
+                                if (uiState.qrStatus == 800) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(Color.Black.copy(alpha = 0.7f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        TextButton(onClick = { viewModel.refreshQrCode() }) {
+                                            Text("点击刷新", color = Color.White)
+                                        }
+                                    }
+                                }
+                            } else {
+                                Text("图片解析失败")
+                            }
+                        } else {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = stringResource(id = R.string.sign_in),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
+                        text = uiState.qrStatusMessage?.asString() ?: "正在加载二维码...",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -213,7 +303,7 @@ private fun LoginContent(viewModel: LoginViewModel, onDismissRequest: () -> Unit
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = { /* TODO: Use Guest Account */ }) {
+            TextButton(onClick = { viewModel.anonymousLogin() }) {
                 Text(
                     text = stringResource(id = R.string.guest_login),
                     fontSize = 14.sp,

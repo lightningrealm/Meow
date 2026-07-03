@@ -15,13 +15,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class LoginMode {
+    PHONE, QR_CODE
+}
+
 data class LoginUiState(
+    val loginMode: LoginMode = LoginMode.PHONE,
     val phone: String = "",
     val captcha: String = "",
     val isSendingCode: Boolean = false,
     val isLoggingIn: Boolean = false,
     val countdownSeconds: Int = 0,
-    val errorMessage: UiText? = null
+    val errorMessage: UiText? = null,
+    
+    // QR Code state
+    val qrImgBase64: String? = null,
+    val qrStatus: Int = 0,
+    val qrStatusMessage: UiText? = null,
+    val qrKey: String? = null
 )
 
 class LoginViewModel(
@@ -127,6 +138,92 @@ class LoginViewModel(
                 _uiState.update { it.copy(errorMessage = displayMsg) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.network_error)) }
+            } finally {
+                _uiState.update { it.copy(isLoggingIn = false) }
+            }
+        }
+    }
+
+    fun setLoginMode(mode: LoginMode) {
+        _uiState.update { it.copy(loginMode = mode, errorMessage = null) }
+        if (mode == LoginMode.QR_CODE) {
+            refreshQrCode()
+        } else {
+            qrPollingJob?.cancel()
+        }
+    }
+
+    private var qrPollingJob: kotlinx.coroutines.Job? = null
+
+    fun refreshQrCode() {
+        qrPollingJob?.cancel()
+        viewModelScope.launch {
+            _uiState.update { it.copy(qrStatusMessage = UiText.DynamicString("正在加载二维码..."), qrImgBase64 = null) }
+            try {
+                val keyResponse = authService.getQrKey()
+                val key = keyResponse.data?.unikey
+                if (key.isNullOrBlank()) {
+                    _uiState.update { it.copy(qrStatusMessage = UiText.DynamicString("获取二维码失败")) }
+                    return@launch
+                }
+                
+                val createResponse = authService.createQrCode(key)
+                val base64 = createResponse.data?.qrimg
+                if (base64.isNullOrBlank()) {
+                    _uiState.update { it.copy(qrStatusMessage = UiText.DynamicString("生成二维码失败")) }
+                    return@launch
+                }
+                
+                _uiState.update { it.copy(qrKey = key, qrImgBase64 = base64, qrStatusMessage = UiText.DynamicString("请使用网易云音乐App扫码登录")) }
+                startQrPolling(key)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(qrStatusMessage = UiText.DynamicString(e.message ?: "网络异常")) }
+            }
+        }
+    }
+
+    private fun startQrPolling(key: String) {
+        qrPollingJob = viewModelScope.launch {
+            while(true) {
+                try {
+                    val res = authService.checkQrStatus(key, noCookie = true)
+                    when (res.code) {
+                        800 -> {
+                            _uiState.update { it.copy(qrStatus = 800, qrStatusMessage = UiText.DynamicString("二维码已过期，请刷新")) }
+                            break
+                        }
+                        801 -> {
+                            _uiState.update { it.copy(qrStatus = 801, qrStatusMessage = UiText.DynamicString("等待扫码")) }
+                        }
+                        802 -> {
+                            _uiState.update { it.copy(qrStatus = 802, qrStatusMessage = UiText.DynamicString("待确认")) }
+                        }
+                        803 -> {
+                            _uiState.update { it.copy(qrStatus = 803, qrStatusMessage = UiText.DynamicString("授权登录成功")) }
+                            _loginSuccessEvent.emit(Unit)
+                            break
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Ignore transient network exceptions during polling
+                }
+                delay(3000)
+            }
+        }
+    }
+
+    fun anonymousLogin() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoggingIn = true, errorMessage = null) }
+            try {
+                val res = authService.anonymousLogin()
+                if (res.code == 200) {
+                    _loginSuccessEvent.emit(Unit)
+                } else {
+                    _uiState.update { it.copy(errorMessage = res.message?.let { UiText.DynamicString(it) } ?: UiText.DynamicString("游客登录失败")) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.DynamicString("网络异常")) }
             } finally {
                 _uiState.update { it.copy(isLoggingIn = false) }
             }
