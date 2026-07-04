@@ -4,6 +4,8 @@ import com.lr.core.network.model.SongDetailResponse
 import com.lr.core.network.model.SongUrlResponse
 import com.lr.core.network.model.LyricResponse
 import com.lr.core.network.model.NewLyricResponse
+import com.lr.core.network.model.LikeResponse
+import com.lr.core.network.model.LikelistResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -28,4 +30,15 @@ interface MeowSongService {
     suspend fun getNewLyric(
         @Query("id") id: String
     ): NewLyricResponse
+
+    @GET("/like")
+    suspend fun likeSong(
+        @Query("id") id: Long,
+        @Query("like") like: Boolean = true
+    ): LikeResponse
+
+    @GET("/likelist")
+    suspend fun getLikelist(
+        @Query("uid") uid: Long
+    ): LikelistResponse
 }

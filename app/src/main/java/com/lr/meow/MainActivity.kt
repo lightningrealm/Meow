@@ -136,7 +136,8 @@ fun RootView(
         }
     }
 
-    val sourceCornerRadiusPx = with(LocalDensity.current) { 20.dp.toPx() } // 与 CardFace 的 RoundedCornerShape(20.dp) 一致
+    val sourceCornerRadiusPx =
+        with(LocalDensity.current) { 20.dp.toPx() } // 与 CardFace 的 RoundedCornerShape(20.dp) 一致
     val cardAnimScope = rememberCoroutineScope()
     android.util.Log.d("SCOPE_TEST", "MainActivity scope: ${cardAnimScope.coroutineContext}")
     val cardAnimState = remember {
@@ -155,18 +156,18 @@ fun RootView(
             Modifier.fillMaxSize()
         ) {
             val backgroundLayer = LocalRootGraphicsLayer.current!!
-        
-        CardAnimRoot(
-            state = cardAnimState,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            CompositionLocalProvider(
-                LocalBottomBarPadding provides bottomBarHeight,
-                LocalIsLogin provides uiState.isLoggedIn,
-                LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) },
-                LocalCardAnimState provides cardAnimState
+
+            CardAnimRoot(
+                state = cardAnimState,
+                modifier = Modifier.fillMaxSize()
             ) {
-            NavDisplay(
+                CompositionLocalProvider(
+                    LocalBottomBarPadding provides bottomBarHeight,
+                    LocalIsLogin provides uiState.isLoggedIn,
+                    LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) },
+                    LocalCardAnimState provides cardAnimState
+                ) {
+                    NavDisplay(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.background)
                             .then(
@@ -218,7 +219,12 @@ fun RootView(
                                 Library(
                                     viewModel = sharedUserViewModel,
                                     onPlaylistClick = { playlistId, coverImgUrl ->
-                                        libraryStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                        libraryStack.add(
+                                            EntryPlaylistDetail(
+                                                playlistId,
+                                                coverImgUrl
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -227,18 +233,26 @@ fun RootView(
                              * Search对应栈
                              * **/
                             entry<EntrySearchRoot> {
-                                Search()
+                                Search(
+                                    onPlaylistClick = { playlistId, coverImgUrl ->
+                                        searchStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                    }
+                                )
                             }
 
                             entry<EntryProfileRoot> {
                                 Profile(
-                                    viewModel = sharedUserViewModel,
                                     onPlaylistClick = { playlistId, coverImgUrl ->
-                                        profileStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                        profileStack.add(
+                                            EntryPlaylistDetail(
+                                                playlistId,
+                                                coverImgUrl
+                                            )
+                                        )
                                     }
                                 )
                             }
-                            
+
                             /**
                              * Playlist Detail (Can be in any stack)
                              * **/
@@ -251,59 +265,59 @@ fun RootView(
                             }
                         }
                     )
+                }
+
+            } // End of CardAnimRoot
+
+            val isMusicPlaying = LocalIsMusicPlaying.current
+
+            AnimatedVisibility(
+                visible = isBottomBarVisible || isMusicPlaying,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                ) + fadeIn(),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(
+                        durationMillis = 250,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeOut(),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                CustomFrostedGlassBottomBar(
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            if (!showPlayerScreen) {
+                                bottomBarHeight = with(density) {
+                                    coordinates.size.height.toDp() + 16.dp
+                                }
+                            }
+                        },
+                    currentTab = uiState.currentTab,
+                    isBottomBarVisible = isBottomBarVisible,
+                    isExpanded = showPlayerScreen,
+                    graphicsLayer = backgroundLayer,
+                    onMiniPlayerClick = {
+                        showPlayerScreen = true
+                    },
+                    onTabSelected = { selectedTab ->
+                        viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
+                    },
+                    playerScreenContent = { glassEnv ->
+                        PlayerScreen(
+                            glassEnv = glassEnv,
+                            onBack = { showPlayerScreen = false }
+                        )
+                    }
+                )
             }
 
-        } // End of CardAnimRoot
-
-        val isMusicPlaying = LocalIsMusicPlaying.current
-        
-        AnimatedVisibility(
-            visible = isBottomBarVisible || isMusicPlaying,
-            enter = slideInVertically(
-                initialOffsetY = { it },
-                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-            ) + fadeIn(),
-            exit = slideOutVertically(
-                targetOffsetY = { it },
-                animationSpec = tween(
-                    durationMillis = 250,
-                    easing = FastOutSlowInEasing
-                )
-            ) + fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            CustomFrostedGlassBottomBar(
-                modifier = Modifier
-                    .onGloballyPositioned { coordinates ->
-                        if (!showPlayerScreen) {
-                            bottomBarHeight = with(density) {
-                                coordinates.size.height.toDp() + 16.dp
-                            }
-                        }
-                    },
-                currentTab = uiState.currentTab,
-                isBottomBarVisible = isBottomBarVisible,
-                isExpanded = showPlayerScreen,
-                graphicsLayer = backgroundLayer,
-                onMiniPlayerClick = {
-                    showPlayerScreen = true
-                },
-                onTabSelected = { selectedTab ->
-                    viewModel.dispatch(MainIntent.ChangeTab(selectedTab))
-                },
-                playerScreenContent = { glassEnv ->
-                    PlayerScreen(
-                        glassEnv = glassEnv,
-                        onBack = { showPlayerScreen = false }
-                    )
-                }
+            Login(
+                showBottomSheet = uiState.showLoginSheet,
+                onDismissRequest = { viewModel.dispatch(MainIntent.DismissLogin) }
             )
-        }
-        
-        Login(
-            showBottomSheet = uiState.showLoginSheet,
-            onDismissRequest = { viewModel.dispatch(MainIntent.DismissLogin) }
-        )
         }
     }
 }

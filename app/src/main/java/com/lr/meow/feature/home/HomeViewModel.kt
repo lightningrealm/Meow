@@ -19,8 +19,7 @@ data class HomeUiState(
     val needsLogin: Boolean = false,
     val errorMessage: UiText? = null,
     val recommendPlaylists: List<RecommendPlaylist> = emptyList(),
-    val recommendSongs: List<Song> = emptyList(),
-    val personalFmSongs: List<Song> = emptyList()
+    val recommendSongs: List<Song> = emptyList()
 )
 
 class HomeViewModel(
@@ -46,32 +45,7 @@ class HomeViewModel(
         }
     }
 
-    fun fetchPersonalFm() {
-        if (_uiState.value.isLoading) return
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, isError = false, errorMessage = null)
-            try {
-                val response = recommendService.getPersonalFm()
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    personalFmSongs = _uiState.value.personalFmSongs + (response.data ?: emptyList())
-                )
-            } catch (e: Exception) {
-                handleNetworkError(e)
-            }
-        }
-    }
 
-    fun popFmSong() {
-        val currentSongs = _uiState.value.personalFmSongs
-        if (currentSongs.isNotEmpty()) {
-            val newList = currentSongs.drop(1)
-            _uiState.value = _uiState.value.copy(personalFmSongs = newList)
-            if (newList.isEmpty()) {
-                fetchPersonalFm()
-            }
-        }
-    }
 
     private fun handleNetworkError(e: Exception) {
         val msg = e.message ?: ""
@@ -105,7 +79,7 @@ class HomeViewModel(
                     val currentSongs = _uiState.value.recommendSongs.filter { it.id != songId }
                     _uiState.value = _uiState.value.copy(recommendSongs = currentSongs)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Ignore or handle dislike error
             }
         }

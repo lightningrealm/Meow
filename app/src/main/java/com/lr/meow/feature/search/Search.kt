@@ -1,45 +1,78 @@
 package com.lr.meow.feature.search
 
+
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.lr.meow.ui.theme.LocalBottomBarPadding
-import com.lr.meow.ui.components.bouncyClickable
-import org.koin.androidx.compose.koinViewModel
-import androidx.compose.ui.res.stringResource
 import com.lr.meow.R
-
+import com.lr.meow.feature.player.PlayerViewModel
+import com.lr.meow.ui.components.bouncyClickable
+import com.lr.meow.ui.theme.LocalBottomBarPadding
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Search(viewModel: SearchViewModel = koinViewModel()) {
+fun Search(
+    viewModel: SearchViewModel = koinViewModel(),
+    playerViewModel: PlayerViewModel = koinViewModel(),
+    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> }
+) {
     val colorScheme = MaterialTheme.colorScheme
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+    
+    BackHandler(enabled = uiState.searchState != SearchState.Idle) {
+        viewModel.dispatch(SearchIntent.UpdateQuery(""))
+    }
 
     Column(
         Modifier
@@ -96,7 +129,7 @@ fun Search(viewModel: SearchViewModel = koinViewModel()) {
             when (uiState.searchState) {
                 SearchState.Idle -> IdleState(uiState, viewModel)
                 SearchState.Typing -> TypingState(uiState, viewModel)
-                SearchState.Results -> ResultsState(uiState, viewModel)
+                SearchState.Results -> ResultsState(uiState, viewModel, playerViewModel, onPlaylistClick)
             }
         }
     }
@@ -260,15 +293,20 @@ private fun TypingState(uiState: SearchUiState, viewModel: SearchViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ResultsState(uiState: SearchUiState, viewModel: SearchViewModel) {
+private fun ResultsState(
+    uiState: SearchUiState, 
+    viewModel: SearchViewModel,
+    playerViewModel: PlayerViewModel,
+    onPlaylistClick: (Long, String?) -> Unit
+) {
     val colorScheme = MaterialTheme.colorScheme
     Column {
         PrimaryTabRow(
-            selectedTabIndex = SearchTab.values().indexOf(uiState.activeTab),
+            selectedTabIndex = SearchTab.entries.indexOf(uiState.activeTab),
             containerColor = Color.Transparent,
             contentColor = colorScheme.primary
         ) {
-            SearchTab.values().forEach { tab ->
+            SearchTab.entries.forEach { tab ->
                 Tab(
                     selected = uiState.activeTab == tab,
                     onClick = { viewModel.dispatch(SearchIntent.ChangeTab(tab)) },
@@ -291,11 +329,13 @@ private fun ResultsState(uiState: SearchUiState, viewModel: SearchViewModel) {
             ) {
                 when (uiState.activeTab) {
                     SearchTab.SONGS -> {
-                        items(uiState.songResults) { song ->
+                        itemsIndexed(uiState.songResults) { index, song ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .bouncyClickable { /* TODO: Play song */ }
+                                    .bouncyClickable {
+                                        playerViewModel.playSongs(uiState.songResults.map { it.toSong() }, index)
+                                    }
                                     .padding(horizontal = 20.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -321,7 +361,7 @@ private fun ResultsState(uiState: SearchUiState, viewModel: SearchViewModel) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .bouncyClickable { /* TODO: Go to playlist */ }
+                                    .bouncyClickable { onPlaylistClick(playlist.id, playlist.coverImgUrl) }
                                     .padding(horizontal = 20.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {

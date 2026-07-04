@@ -57,6 +57,7 @@ import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.model.CardAnimTransform
 import com.lr.meow.LocalIsLogin
 import com.lr.meow.LocalRequireAuth
+import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import kotlinx.coroutines.launch
@@ -65,6 +66,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun Profile(
     viewModel: SharedUserViewModel = koinViewModel(),
+    playerViewModel: PlayerViewModel = koinViewModel(),
     onPlaylistClick: (Long, String?) -> Unit = { _, _ -> }
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -290,7 +292,10 @@ fun Profile(
                                         Column(
                                             modifier = Modifier
                                                 .width(100.dp)
-                                                .bouncyClickable { /* TODO: Play song */ }
+                                                .bouncyClickable {
+                                                    val songs = recentSongs.itemSnapshotList.items.map { it.song }
+                                                    playerViewModel.playSongs(songs, index)
+                                                }
                                         ) {
                                             AsyncImage(
                                                 model = song.al?.picUrl,

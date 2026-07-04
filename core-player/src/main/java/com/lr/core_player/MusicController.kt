@@ -2,20 +2,18 @@ package com.lr.core_player
 
 import android.content.ComponentName
 import android.content.Context
+import android.util.Log
+import androidx.concurrent.futures.await
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 
 class MusicController(private val context: Context) {
 
-    private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
 
     private val _playbackState = MutableStateFlow(Player.STATE_IDLE)
@@ -33,25 +31,33 @@ class MusicController(private val context: Context) {
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
-    fun initialize() {
+    suspend fun initialize() {
         val sessionToken = SessionToken(
             context,
             ComponentName(context, MusicService::class.java)
         )
-        controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        controllerFuture?.addListener(
-            {
-                controller = controllerFuture?.get()
-                controller?.addListener(playerListener)
-            },
-            MoreExecutors.directExecutor()
-        )
+        try {
+            controller = MediaController.Builder(context, sessionToken).buildAsync().await()
+            controller?.let {
+                it.addListener(playerListener)
+                syncInitialState(it)
+            }
+            Log.d("MusicController","后台音乐服务连接成功")
+        } catch (e: Exception) {
+            Log.d("MusicController","后台音乐服务连接失败",e)
+        }
+    }
+
+    private fun syncInitialState(controller: MediaController) {
+        _playbackState.value = controller.playbackState
+        _isPlaying.value = controller.isPlaying
+        _currentMediaItem.value = controller.currentMediaItem
+        updateProgress()
     }
 
     fun release() {
         controller?.removeListener(playerListener)
-        controllerFuture?.let { MediaController.releaseFuture(it) }
-        controllerFuture = null
+        controller?.release()
         controller = null
     }
 
@@ -62,6 +68,16 @@ class MusicController(private val context: Context) {
             it.play()
         }
     }
+
+    fun addMediaItems(items: List<MediaItem>) {
+        controller?.addMediaItems(items)
+    }
+
+    val currentMediaItemIndex: Int
+        get() = controller?.currentMediaItemIndex ?: 0
+
+    val mediaItemCount: Int
+        get() = controller?.mediaItemCount ?: 0
 
     fun play() {
         controller?.play()
@@ -87,7 +103,9 @@ class MusicController(private val context: Context) {
     fun updateProgress() {
         controller?.let {
             _currentPosition.value = it.currentPosition
-            _duration.value = it.duration
+            if (it.duration >= 0) {
+                _duration.value = it.duration
+            }
         }
     }
 

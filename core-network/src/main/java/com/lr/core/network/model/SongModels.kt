@@ -46,3 +46,17 @@ data class SongDetailResponse(
     @SerialName("songs")
     val songs: List<Song>? = null
 )
+
+@Serializable
+data class LikelistResponse(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("ids")
+    val ids: List<Long>? = null
+)
+
+@Serializable
+data class LikeResponse(
+    @SerialName("code")
+    val code: Int
+)

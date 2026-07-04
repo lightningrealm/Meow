@@ -27,6 +27,7 @@ enum class SwipeDirection {
 fun SwipeableTinderCard(
     onSwiped: (SwipeDirection) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -41,7 +42,8 @@ fun SwipeableTinderCard(
             .graphicsLayer(
                 rotationZ = offset.value.x / 20f
             )
-            .pointerInput(Unit) {
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
                 detectDragGestures(
                     onDragEnd = {
                         coroutineScope.launch {

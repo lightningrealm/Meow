@@ -29,6 +29,7 @@ dependencies {
     api(libs.androidx.media3.exoplayer)
     api(libs.androidx.media3.ui)
     api(libs.androidx.media3.session)
+    api(libs.androidx.concurrent.futures.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)

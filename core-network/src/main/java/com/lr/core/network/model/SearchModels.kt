@@ -68,6 +68,15 @@ data class SearchSong(
             val fallback = if (java.util.Locale.getDefault().language == "zh") "未知歌手" else "Unknown Artist"
             return ar?.joinToString("/") { it.name ?: fallback } ?: fallback
         }
+        
+    fun toSong(): Song {
+        return Song(
+            id = id,
+            name = name,
+            ar = ar,
+            al = al
+        )
+    }
 }
 
 @Serializable

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -19,6 +20,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -26,14 +28,19 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.lr.meow.ui.common.util.UiText
 import com.lr.meow.R
+import kotlinx.coroutines.flow.flowOf
 
 
+import com.lr.core.network.api.MeowSongService
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.update
 
 class SharedUserViewModel(
     private val userService: MeowUserService,
     private val authService: MeowAuthService,
     private val persistentCookieJar: PersistentCookieJar,
-    private val profileStorage: ProfileStorage
+    private val profileStorage: ProfileStorage,
+    private val songService: MeowSongService
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -81,10 +88,71 @@ class SharedUserViewModel(
         initialValue = null
     )
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val _likedSongIds = MutableStateFlow<Set<Long>>(emptySet())
+    val likedSongIds: StateFlow<Set<Long>> = _likedSongIds.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            currentUid.collect { uid ->
+                if (uid != null) {
+                    try {
+                        val response = songService.getLikelist(uid)
+                        val ids = response.ids
+                        if (response.code == 200 && ids != null) {
+                            _likedSongIds.value = ids.toSet()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                } else {
+                    _likedSongIds.value = emptySet()
+                }
+            }
+        }
+    }
+
+    fun toggleLike(songId: Long) {
+        Log.d("ToggleLike", "toggleLike called with songId=$songId")
+        val isLiked = _likedSongIds.value.contains(songId)
+        val newStatus = !isLiked
+        Log.d("ToggleLike", "isLiked=$isLiked, newStatus=$newStatus")
+
+        // Optimistic UI update
+        if (newStatus) {
+            _likedSongIds.update { it + songId }
+        } else {
+            _likedSongIds.update { it - songId }
+        }
+
+        viewModelScope.launch {
+            try {
+                Log.d("ToggleLike", "Sending network request likeSong id=$songId like=$newStatus")
+                val response = songService.likeSong(id = songId, like = newStatus)
+                Log.d("ToggleLike", "Response code=${response.code}")
+                if (response.code != 200) {
+                    // Revert on failure
+                    if (newStatus) {
+                        _likedSongIds.update { it - songId }
+                    } else {
+                        _likedSongIds.update { it + songId }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ToggleLike", "Exception: ${e.message}", e)
+                // Revert on failure
+                if (newStatus) {
+                    _likedSongIds.update { it - songId }
+                } else {
+                    _likedSongIds.update { it + songId }
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     val recentSongsPagingFlow = currentUid.flatMapLatest { uid ->
         if (uid == null) {
-            kotlinx.coroutines.flow.flowOf(androidx.paging.PagingData.empty())
+            flowOf(PagingData.empty())
         } else {
             Pager(
                 config = PagingConfig(pageSize = 30),
@@ -93,10 +161,10 @@ class SharedUserViewModel(
         }
     }.cachedIn(viewModelScope)
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     val recentPlaylistsPagingFlow = currentUid.flatMapLatest { uid ->
         if (uid == null) {
-            kotlinx.coroutines.flow.flowOf(androidx.paging.PagingData.empty())
+            flowOf(PagingData.empty())
         } else {
             Pager(
                 config = PagingConfig(pageSize = 30),
@@ -141,10 +209,13 @@ class SharedUserViewModel(
                     logout()
                     return@launch
                 }
-                
+
                 // Refresh login asynchronously in background
                 launch {
-                    try { authService.refreshLogin() } catch (e: Exception) { /* ignore */ }
+                    try {
+                        authService.refreshLogin()
+                    } catch (_: Exception) { /* ignore */
+                    }
                 }
 
                 // To fetch details, we first need to know the UID.
@@ -159,20 +230,44 @@ class SharedUserViewModel(
                     logout()
                     return@launch
                 }
-                
+
                 // Removed _currentUid.value = uid
 
                 // Now we can fetch details, level, subcount and playlists concurrently
-                val detailDeferred = async { try { userService.getUserDetail(uid) } catch (e: Exception) { null } }
-                val levelDeferred = async { try { userService.getUserLevel() } catch (e: Exception) { null } }
-                val subcountDeferred = async { try { userService.getUserSubcount() } catch (e: Exception) { null } }
-                val playlistsDeferred = async { try { userService.getUserPlaylists(uid, limit = 1000) } catch (e: Exception) { null } }
+                val detailDeferred = async {
+                    try {
+                        userService.getUserDetail(uid)
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                val levelDeferred = async {
+                    try {
+                        userService.getUserLevel()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                val subcountDeferred = async {
+                    try {
+                        userService.getUserSubcount()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                val playlistsDeferred = async {
+                    try {
+                        userService.getUserPlaylists(uid, limit = 1000)
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
 
                 val detail = detailDeferred.await()
                 val level = levelDeferred.await()
                 val subcount = subcountDeferred.await()
                 val playlistsResponse = playlistsDeferred.await()
-                
+
                 val finalProfile = detail?.profile ?: accountResponse.profile
 
                 // Save Playlists
@@ -199,11 +294,12 @@ class SharedUserViewModel(
                 Log.e("SharedUserViewModel", "Failed to fetch profile", e)
                 _isLoading.value = false
                 _isError.value = true
-                _errorMessage.value = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.network_error)
+                _errorMessage.value = e.message?.let { UiText.DynamicString(it) }
+                    ?: UiText.StringResource(R.string.network_error)
             }
         }
     }
-    
+
     fun logout() {
         viewModelScope.launch {
             persistentCookieJar.clearCookies("112.124.4.51")
