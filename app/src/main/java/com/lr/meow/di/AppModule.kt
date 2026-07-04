@@ -12,6 +12,7 @@ import com.lr.meow.feature.home.HomeViewModel
 import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.feature.search.SearchViewModel
 import com.lr.meow.feature.album.AlbumDetailViewModel
+import com.lr.meow.feature.artist.ArtistDetailViewModel
 
 val appModule = module {
     viewModel { LoginViewModel(authService = get()) }
@@ -22,6 +23,7 @@ val appModule = module {
     viewModel { HomeViewModel(recommendService = get()) }
     viewModel { SearchViewModel(searchService = get(), searchHistoryStorage = get()) }
     viewModel { AlbumDetailViewModel(songService = get()) }
+    viewModel { ArtistDetailViewModel(service = get()) }
     
     single { MusicController(get()) }
     viewModel { PlayerViewModel(musicController = get(), songService = get(), recommendService = get()) }

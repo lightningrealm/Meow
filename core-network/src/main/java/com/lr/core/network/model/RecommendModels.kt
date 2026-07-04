@@ -104,7 +104,9 @@ data class Album(
     @SerialName("picUrl")
     val picUrl: String? = null,
     @SerialName("artist")
-    val artist: Artist? = null
+    val artist: Artist? = null,
+    @SerialName("size")
+    val size: Int = 0
 )
 
 @Serializable

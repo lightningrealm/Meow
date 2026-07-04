@@ -5,6 +5,9 @@ import com.lr.core.network.model.SongUrlResponse
 import com.lr.core.network.model.LyricResponse
 import com.lr.core.network.model.NewLyricResponse
 import com.lr.core.network.model.AlbumDetailResponse
+import com.lr.core.network.model.ArtistAlbumsResponse
+import com.lr.core.network.model.ArtistSongsResponse
+import com.lr.core.network.model.ArtistTopSongsResponse
 import com.lr.core.network.model.LikeResponse
 import com.lr.core.network.model.LikelistResponse
 import retrofit2.http.GET
@@ -47,4 +50,24 @@ interface MeowSongService {
     suspend fun getAlbum(
         @Query("id") id: Long
     ): AlbumDetailResponse
+
+    @GET("/artist/album")
+    suspend fun getArtistAlbums(
+        @Query("id") id: Long,
+        @Query("limit") limit: Int = 30,
+        @Query("offset") offset: Int = 0
+    ): ArtistAlbumsResponse
+
+    @GET("/artist/top/song")
+    suspend fun getArtistTopSongs(
+        @Query("id") id: Long
+    ): ArtistTopSongsResponse
+
+    @GET("/artist/songs")
+    suspend fun getArtistSongs(
+        @Query("id") id: Long,
+        @Query("order") order: String = "hot",
+        @Query("limit") limit: Int = 50,
+        @Query("offset") offset: Int = 0
+    ): ArtistSongsResponse
 }

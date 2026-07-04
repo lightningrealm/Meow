@@ -78,4 +78,8 @@
     <string name="followers_count">%1$d 粉丝</string>
     <string name="following_count">%1$d 关注</string>
     <string name="guest">游客</string>
+    <string name="artist">歌手</string>
+    <string name="top_songs">热门50首</string>
+    <string name="albums">所有专辑</string>
+    <string name="all_songs">全部歌曲</string>
 </resources>

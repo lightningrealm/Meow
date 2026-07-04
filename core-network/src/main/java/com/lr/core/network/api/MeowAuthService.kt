@@ -2,15 +2,14 @@ package com.lr.core.network.api
 
 import com.lr.core.network.model.AnonymousLoginResponse
 import com.lr.core.network.model.BaseResponse
-import com.lr.core.network.model.CaptchaSentResponse
 import com.lr.core.network.model.LoginResponse
 import com.lr.core.network.model.LoginStatusResponse
+import com.lr.core.network.model.QrCheckResponse
+import com.lr.core.network.model.QrCreateResponse
+import com.lr.core.network.model.QrKeyResponse
+import com.lr.core.network.model.RefreshLoginResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
-import com.lr.core.network.model.QrKeyResponse
-import com.lr.core.network.model.QrCreateResponse
-import com.lr.core.network.model.QrCheckResponse
-import com.lr.core.network.model.RefreshLoginResponse
 
 interface MeowAuthService {
     

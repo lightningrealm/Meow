@@ -78,4 +78,8 @@
     <string name="followers_count">%1$d Followers</string>
     <string name="following_count">%1$d Following</string>
     <string name="guest">Guest</string>
+    <string name="artist">Artist</string>
+    <string name="top_songs">Top 50</string>
+    <string name="albums">Albums</string>
+    <string name="all_songs">All Songs</string>
 </resources>

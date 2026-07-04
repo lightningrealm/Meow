@@ -65,7 +65,8 @@ fun Search(
     viewModel: SearchViewModel = koinViewModel(),
     playerViewModel: PlayerViewModel = koinViewModel(),
     onPlaylistClick: (Long, String?) -> Unit = { _, _ -> },
-    onAlbumClick: (Long, String?) -> Unit = { _, _ -> }
+    onAlbumClick: (Long, String?) -> Unit = { _, _ -> },
+    onArtistClick: (Long, String?, String?) -> Unit = { _, _, _ -> }
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val uiState by viewModel.uiState.collectAsState()
@@ -130,7 +131,7 @@ fun Search(
             when (uiState.searchState) {
                 SearchState.Idle -> IdleState(uiState, viewModel)
                 SearchState.Typing -> TypingState(uiState, viewModel)
-                SearchState.Results -> ResultsState(uiState, viewModel, playerViewModel, onPlaylistClick, onAlbumClick)
+                SearchState.Results -> ResultsState(uiState, viewModel, playerViewModel, onPlaylistClick, onAlbumClick, onArtistClick)
             }
         }
     }
@@ -299,7 +300,8 @@ private fun ResultsState(
     viewModel: SearchViewModel,
     playerViewModel: PlayerViewModel,
     onPlaylistClick: (Long, String?) -> Unit,
-    onAlbumClick: (Long, String?) -> Unit
+    onAlbumClick: (Long, String?) -> Unit,
+    onArtistClick: (Long, String?, String?) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Column {
@@ -348,18 +350,41 @@ private fun ResultsState(
                                         color = colorScheme.onBackground,
                                         maxLines = 1
                                     )
-                                    Text(
-                                        text = "${song.artistName} - ${song.al?.name ?: ""}",
-                                        fontSize = 13.sp,
-                                        color = colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        modifier = Modifier.bouncyClickable {
-                                            val al = song.al
-                                            if (al != null) {
-                                                onAlbumClick(al.id, al.picUrl)
-                                            }
-                                        }
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = song.artistName,
+                                            fontSize = 13.sp,
+                                            color = colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            modifier = Modifier
+                                                .bouncyClickable {
+                                                    val firstArtist = song.ar?.firstOrNull()
+                                                    if (firstArtist != null) {
+                                                        onArtistClick(firstArtist.id, null, firstArtist.name)
+                                                    }
+                                                }
+                                                .weight(1f, fill = false)
+                                        )
+                                        Text(
+                                            text = " - ",
+                                            fontSize = 13.sp,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = song.al?.name ?: "",
+                                            fontSize = 13.sp,
+                                            color = colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            modifier = Modifier
+                                                .bouncyClickable {
+                                                    val al = song.al
+                                                    if (al != null) {
+                                                        onAlbumClick(al.id, al.picUrl)
+                                                    }
+                                                }
+                                                .weight(1f, fill = false)
+                                        )
+                                    }
                                 }
                             }
                         }

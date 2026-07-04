@@ -23,9 +23,11 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
 import androidx.core.graphics.get
 import androidx.core.graphics.withSave
 import com.lr.glassui.model.GlassEnvironment
@@ -130,9 +132,14 @@ fun Modifier.glassBlurBackground(
 fun Modifier.glassBlurBackground(
     layer: GraphicsLayer,
     blurRadius: Float,
+    cornerRadiusPx: Float = 80f,  // 对应你 32.dp 的圆角
+    refractionFactor: Float = 30f,
+    dispersionFactor: Float = 5f,
+    rimBrightness: Float = 0.15f,
     onDarkBackground: (GlassEnvironment) -> Unit = {}
 ): Modifier = composed {
     var barRect by remember { mutableStateOf(IntRect.Zero) }
+    val effectLayer = rememberGraphicsLayer()
     
     LaunchedEffect(Unit) {
         while (isActive) {
@@ -196,20 +203,26 @@ fun Modifier.glassBlurBackground(
         if(barRect.isEmpty||layer.size.width==0){
             return@drawBehind
         }
-        layer.renderEffect =  buildRefractionChain(
+        val refractionChain = buildRefractionChain(
             blurRadius = blurRadius,
             barRect = barRect,
-            cornerRadiusPx = 80f,  // 对应你 32.dp 的圆角
-            refractionFactor = 30f,
-            dispersionFactor = 5f,
-            rimBrightness = 0.15f
-        ).asComposeRenderEffect()
-        translate(
-            left = -barRect.left.toFloat(),
-            top = -barRect.top.toFloat()
-        ){
-            drawLayer(layer)
+            cornerRadiusPx = cornerRadiusPx,  // 对应你 32.dp 的圆角
+            refractionFactor = refractionFactor,
+            dispersionFactor = dispersionFactor,
+            rimBrightness = rimBrightness
+        )
+        
+        effectLayer.renderEffect = refractionChain.asComposeRenderEffect()
+        val intSize = IntSize(size.width.toInt(), size.height.toInt())
+        effectLayer.record(size = intSize) {
+            translate(
+                left = -barRect.left.toFloat(),
+                top = -barRect.top.toFloat()
+            ){
+                drawLayer(layer)
+            }
         }
+        drawLayer(effectLayer)
     }
 }
 
@@ -224,9 +237,11 @@ private fun buildRefractionChain(
     dispersionFactor: Float = 5f,
     rimBrightness: Float = 0.15f
 ): RenderEffect {
+    val halfWidth = barRect.width / 2f
+    val halfHeight = barRect.height / 2f
     val shader = cachedGlassShader
-    shader.setFloatUniform("barCenter", barRect.center.x.toFloat(), barRect.center.y.toFloat())
-    shader.setFloatUniform("barHalfSize", barRect.width / 2f, barRect.height / 2f)
+    shader.setFloatUniform("barCenter", halfWidth, halfHeight)
+    shader.setFloatUniform("barHalfSize", halfWidth, halfHeight)
     shader.setFloatUniform("iRadius", cornerRadiusPx)
     shader.setFloatUniform("iRefractionFactor", refractionFactor)
     shader.setFloatUniform("iDispersionFactor", dispersionFactor)

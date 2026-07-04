@@ -50,7 +50,8 @@ import org.koin.androidx.compose.koinViewModel
 fun Discover(
     viewModel: DiscoverViewModel = koinViewModel(),
     onPlaylistClick: (Long, String?) -> Unit = { _, _ -> },
-    onAlbumClick: (Long, String?) -> Unit = { _, _ -> }
+    onAlbumClick: (Long, String?) -> Unit = { _, _ -> },
+    onArtistClick: (Long, String?, String?) -> Unit = { _, _, _ -> }
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val isLoggedIn = LocalIsLogin.current
@@ -354,19 +355,43 @@ fun Discover(
                                     Column(
                                         modifier = Modifier
                                             .width(120.dp)
-                                            .bouncyClickable { /* TODO: Open Artist */ },
+                                            .bouncyClickable {
+                                                val id = artist.id
+                                                if (id != null) {
+                                                    val pic = artist.picUrl ?: ""
+                                                    val ready = cardAnimState.prepareExpand("artist_cover_$id") { _ ->
+                                                        CardAnimTransform(
+                                                            x = targetXPx,
+                                                            y = targetYPx,
+                                                            width = targetSizePx,
+                                                            height = targetSizePx,
+                                                            cornerRadius = targetSizePx / 2f
+                                                        )
+                                                    }
+                                                    if (ready) {
+                                                        onArtistClick(id, pic, artist.name)
+                                                        cardAnimState.animScope.launch { cardAnimState.runExpand() }
+                                                    }
+                                                }
+                                            },
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        AsyncImage(
-                                            model = artist.picUrl,
-                                            contentDescription = artist.name,
-                                            contentScale = ContentScale.Crop,
+                                        SharedElement(
+                                            cardId = "artist_cover_${artist.id}",
                                             modifier = Modifier
                                                 .width(120.dp)
                                                 .height(120.dp)
                                                 .clip(androidx.compose.foundation.shape.CircleShape)
-                                                .background(colorScheme.surfaceVariant)
-                                        )
+                                        ) {
+                                            AsyncImage(
+                                                model = artist.picUrl,
+                                                contentDescription = artist.name,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(colorScheme.surfaceVariant)
+                                            )
+                                        }
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
                                             text = artist.name ?: stringResource(id = R.string.unknown_artist),

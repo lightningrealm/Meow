@@ -4,15 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TipsAndUpdates
@@ -29,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import com.lr.glassui.glassBlurBackground
@@ -75,17 +71,19 @@ fun CircleFrostedGlassButton(
         animationSpec = tween(500)
     )
 
-    val radius = remember { 25.dp }
-
+    val radius = remember { 20.dp }
+    val density = LocalDensity.current
     Box(
         modifier = Modifier
-            .padding(14.dp)
-            //.padding(bottom = 16.dp)
             .width(2*radius)
             .height(2*radius)
             .clip(RoundedCornerShape(radius))
-            .glassBlurBackground(graphicsLayer, blurRadius = 5f) { glassEnviroment ->
-                glassEnv = glassEnviroment
+            .glassBlurBackground(
+                graphicsLayer,
+                blurRadius = 0f,
+                cornerRadiusPx = with(density){20.dp.toPx()},
+            ) { glassEnvironment ->
+                glassEnv = glassEnvironment
             }
             .background(glassTint)
             // 4. 动态环境光边框：使用带透明度的环境主色调，打造物理倒角折射高光

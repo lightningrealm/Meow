@@ -4,17 +4,18 @@ import com.lr.core.network.AuthInterceptor
 import com.lr.core.network.MeowApiService
 import com.lr.core.network.PersistentCookieJar
 import com.lr.core.network.api.MeowAuthService
+import com.lr.core.network.api.MeowPlaylistService
 import com.lr.core.network.api.MeowRecommendService
 import com.lr.core.network.api.MeowSearchService
+import com.lr.core.network.api.MeowSongService
 import com.lr.core.network.api.MeowUserService
-import com.lr.core.network.api.MeowPlaylistService
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import java.util.concurrent.TimeUnit
 
 private const val BASE_URL = "http://112.124.4.51:3000/"
@@ -80,6 +81,6 @@ val networkModule = module {
     }
 
     single {
-        get<Retrofit>().create(com.lr.core.network.api.MeowSongService::class.java)
+        get<Retrofit>().create(MeowSongService::class.java)
     }
 }

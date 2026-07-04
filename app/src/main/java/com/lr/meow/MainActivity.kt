@@ -48,6 +48,7 @@ import com.lr.meow.data.navigation.EntryHomeRoot
 import com.lr.meow.data.navigation.EntryLibraryRoot
 import com.lr.meow.data.navigation.EntryPlaylistDetail
 import com.lr.meow.data.navigation.EntryAlbumDetail
+import com.lr.meow.data.navigation.EntryArtistDetail
 import com.lr.meow.data.navigation.EntryProfileRoot
 import com.lr.meow.data.navigation.EntrySearchRoot
 import com.lr.meow.data.navigation.MyNavTab
@@ -61,11 +62,14 @@ import com.lr.meow.feature.player.PlayerScreen
 import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.feature.playlist.PlaylistDetail
 import com.lr.meow.feature.album.AlbumDetail
+import com.lr.meow.feature.artist.ArtistDetail
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.profile.SharedUserIntent
 import com.lr.meow.feature.profile.SharedUserViewModel
 import com.lr.meow.feature.search.Search
+import com.lr.meow.ui.common.component.glass.CircleFrostedGlassButton
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
+import com.lr.meow.ui.common.component.glass.FloatingTopBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalIsMusicPlaying
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
@@ -211,6 +215,9 @@ fun RootView(
                                     },
                                     onAlbumClick = { albumId, coverImgUrl ->
                                         discoverStack.add(EntryAlbumDetail(albumId, coverImgUrl))
+                                    },
+                                    onArtistClick = { artistId, coverImgUrl, artistName ->
+                                        discoverStack.add(EntryArtistDetail(artistId, coverImgUrl, artistName))
                                     }
                                 )
                             }
@@ -246,6 +253,9 @@ fun RootView(
                                     },
                                     onAlbumClick = { albumId, coverImgUrl ->
                                         searchStack.add(EntryAlbumDetail(albumId, coverImgUrl))
+                                    },
+                                    onArtistClick = { artistId, coverImgUrl, artistName ->
+                                        searchStack.add(EntryArtistDetail(artistId, coverImgUrl, artistName))
                                     }
                                 )
                             }
@@ -284,6 +294,18 @@ fun RootView(
                                 AlbumDetail(
                                     albumId = it.id,
                                     coverImgUrl = it.coverImgUrl,
+                                    onBack = { activeStack.removeAt(activeStack.lastIndex) }
+                                )
+                            }
+                            
+                            /**
+                             * Artist Detail (Can be in any stack)
+                             * **/
+                            entry<EntryArtistDetail> {
+                                ArtistDetail(
+                                    artistId = it.id,
+                                    artistName = it.name ?: "",
+                                    artistAvatarUrl = it.coverImgUrl ?: "",
                                     onBack = { activeStack.removeAt(activeStack.lastIndex) }
                                 )
                             }
@@ -337,6 +359,10 @@ fun RootView(
                     }
                 )
             }
+
+            /*FloatingTopBar(
+                graphicsLayer = backgroundLayer
+            ) { }*/
 
             Login(
                 showBottomSheet = uiState.showLoginSheet,
