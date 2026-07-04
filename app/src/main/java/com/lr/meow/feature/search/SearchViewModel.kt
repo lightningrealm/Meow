@@ -6,11 +6,11 @@ import com.lr.core.datastore.SearchHistoryStorage
 import com.lr.core.network.api.MeowSearchService
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.lr.meow.ui.common.util.UiText
 import com.lr.meow.R
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @OptIn(FlowPreview::class)
@@ -39,7 +39,7 @@ class SearchViewModel(
         // Setup debounce for typing suggestions
         viewModelScope.launch {
             queryFlow
-                .debounce(300)
+                .debounce(300.milliseconds)
                 .distinctUntilChanged()
                 .collect { query ->
                     if (query.isNotBlank() && _uiState.value.searchState == SearchState.Typing) {
@@ -58,10 +58,12 @@ class SearchViewModel(
                 handleUpdateQuery(intent.keyword)
                 submitSearch()
             }
+
             is SearchIntent.ClickHistory -> {
                 handleUpdateQuery(intent.keyword)
                 submitSearch()
             }
+
             is SearchIntent.ClearHistory -> clearHistory()
             is SearchIntent.LoadMore -> loadMoreResults()
         }
@@ -69,9 +71,9 @@ class SearchViewModel(
 
     private fun handleUpdateQuery(query: String) {
         val state = if (query.isBlank()) SearchState.Idle else SearchState.Typing
-        _uiState.update { 
+        _uiState.update {
             it.copy(
-                query = query, 
+                query = query,
                 searchState = state,
                 suggestions = if (query.isBlank()) emptyList() else it.suggestions
             )
@@ -84,7 +86,7 @@ class SearchViewModel(
         if (query.isBlank()) return
 
         _uiState.update { it.copy(searchState = SearchState.Results) }
-        
+
         // Save history
         viewModelScope.launch {
             searchHistoryStorage.addSearchQuery(query)
@@ -110,7 +112,7 @@ class SearchViewModel(
                 if (response.code == 200) {
                     _uiState.update { it.copy(hotSearches = response.data ?: emptyList()) }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Ignore hot search error gracefully
             }
         }
@@ -121,9 +123,13 @@ class SearchViewModel(
             try {
                 val response = searchService.getSearchSuggest(query)
                 if (response.code == 200) {
-                    _uiState.update { it.copy(suggestions = response.result?.allMatch ?: emptyList()) }
+                    _uiState.update {
+                        it.copy(
+                            suggestions = response.result?.allMatch ?: emptyList()
+                        )
+                    }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Ignore suggestion error gracefully
             }
         }
@@ -144,15 +150,32 @@ class SearchViewModel(
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
-                            songResults = if (tab == SearchTab.SONGS) result?.songs ?: emptyList() else state.songResults,
-                            playlistResults = if (tab == SearchTab.PLAYLISTS) result?.playlists ?: emptyList() else state.playlistResults
+                            songResults = if (tab == SearchTab.SONGS) result?.songs
+                                ?: emptyList() else state.songResults,
+                            playlistResults = if (tab == SearchTab.PLAYLISTS) result?.playlists
+                                ?: emptyList() else state.playlistResults
                         )
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, isError = true, errorMessage = UiText.StringResource(R.string.search_failed_code, response.code)) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isError = true,
+                            errorMessage = UiText.StringResource(
+                                R.string.search_failed_code,
+                                response.code
+                            )
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, isError = true, errorMessage = e.message?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.search_failed)) }
+                _uiState.update { it ->
+                    it.copy(
+                        isLoading = false,
+                        isError = true,
+                        errorMessage = e.message?.let { UiText.DynamicString(it) }
+                            ?: UiText.StringResource(R.string.search_failed))
+                }
             }
         }
     }
