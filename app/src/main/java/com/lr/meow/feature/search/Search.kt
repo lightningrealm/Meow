@@ -64,7 +64,8 @@ import org.koin.androidx.compose.koinViewModel
 fun Search(
     viewModel: SearchViewModel = koinViewModel(),
     playerViewModel: PlayerViewModel = koinViewModel(),
-    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> }
+    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> },
+    onAlbumClick: (Long, String?) -> Unit = { _, _ -> }
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val uiState by viewModel.uiState.collectAsState()
@@ -129,7 +130,7 @@ fun Search(
             when (uiState.searchState) {
                 SearchState.Idle -> IdleState(uiState, viewModel)
                 SearchState.Typing -> TypingState(uiState, viewModel)
-                SearchState.Results -> ResultsState(uiState, viewModel, playerViewModel, onPlaylistClick)
+                SearchState.Results -> ResultsState(uiState, viewModel, playerViewModel, onPlaylistClick, onAlbumClick)
             }
         }
     }
@@ -297,7 +298,8 @@ private fun ResultsState(
     uiState: SearchUiState, 
     viewModel: SearchViewModel,
     playerViewModel: PlayerViewModel,
-    onPlaylistClick: (Long, String?) -> Unit
+    onPlaylistClick: (Long, String?) -> Unit,
+    onAlbumClick: (Long, String?) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Column {
@@ -350,7 +352,13 @@ private fun ResultsState(
                                         text = "${song.artistName} - ${song.al?.name ?: ""}",
                                         fontSize = 13.sp,
                                         color = colorScheme.onSurfaceVariant,
-                                        maxLines = 1
+                                        maxLines = 1,
+                                        modifier = Modifier.bouncyClickable {
+                                            val al = song.al
+                                            if (al != null) {
+                                                onAlbumClick(al.id, al.picUrl)
+                                            }
+                                        }
                                     )
                                 }
                             }

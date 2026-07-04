@@ -120,7 +120,7 @@ data class Toplist(
     @SerialName("id")
     val id: Long,
     @SerialName("name")
-    val name: String,
+    val name: String?,
     @SerialName("coverImgUrl")
     val coverImgUrl: String? = null,
     @SerialName("updateFrequency")

@@ -65,7 +65,8 @@ import org.koin.androidx.compose.koinViewModel
 fun PlaylistDetail(
     playlistId: Long,
     coverImgUrl: String? = null,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAlbumClick: (Long, String?) -> Unit = { _, _ -> }
 ) {
     val viewModel: PlaylistDetailViewModel = koinViewModel()
     val playerViewModel: PlayerViewModel = koinViewModel()
@@ -193,7 +194,13 @@ fun PlaylistDetail(
                                 fontSize = 12.sp,
                                 color = colorScheme.onBackground.copy(alpha = 0.6f),
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.bouncyClickable {
+                                     val al = song.al
+                                     if (al != null) {
+                                         onAlbumClick(al.id, al.picUrl)
+                                     }
+                                 }
                             )
                         }
                     }

@@ -60,3 +60,22 @@ data class LikeResponse(
     @SerialName("code")
     val code: Int
 )
+
+@Serializable
+data class AlbumDetailResponse(
+    @SerialName("code") val code: Int,
+    @SerialName("album") val album: AlbumDetail? = null,
+    @SerialName("songs") val songs: List<Song>? = null
+)
+
+@Serializable
+data class AlbumDetail(
+    @SerialName("id") val id: Long,
+    @SerialName("name") val name: String,
+    @SerialName("picUrl") val picUrl: String? = null,
+    @SerialName("description") val description: String? = null,
+    @SerialName("publishTime") val publishTime: Long? = null,
+    @SerialName("artist") val artist: Artist? = null,
+    @SerialName("artists") val artists: List<Artist>? = null,
+    @SerialName("size") val size: Int = 0
+)

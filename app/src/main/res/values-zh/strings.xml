@@ -48,6 +48,7 @@
     <string name="unknown_chart">未知榜单</string>
     <string name="new_albums">新碟首发</string>
     <string name="unknown_album">未知专辑</string>
+    <string name="album">专辑</string>
     <string name="unknown_artist">未知歌手</string>
     <string name="hot_artists">热门歌手</string>
     

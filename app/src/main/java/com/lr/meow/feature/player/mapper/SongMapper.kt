@@ -3,6 +3,7 @@ package com.lr.meow.feature.player.mapper
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.lr.core.network.model.Song
+import androidx.core.net.toUri
 
 fun Song.toMediaItem(url: String): MediaItem {
     return MediaItem.Builder()
@@ -13,7 +14,7 @@ fun Song.toMediaItem(url: String): MediaItem {
                 .setTitle(this.name)
                 .setArtist(this.artistName)
                 .setAlbumTitle(this.al?.name)
-                .setArtworkUri(android.net.Uri.parse(this.al?.picUrl ?: ""))
+                .setArtworkUri((this.al?.picUrl ?: "").toUri())
                 .build()
         )
         .build()

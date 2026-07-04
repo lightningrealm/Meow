@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun Discover(
     viewModel: DiscoverViewModel = koinViewModel(),
-    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> }
+    onPlaylistClick: (Long, String?) -> Unit = { _, _ -> },
+    onAlbumClick: (Long, String?) -> Unit = { _, _ -> }
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val isLoggedIn = LocalIsLogin.current
@@ -57,7 +59,7 @@ fun Discover(
 
     val cardAnimState = LocalCardAnimState.current
 
-    val density = androidx.compose.ui.platform.LocalDensity.current
+    val density = LocalDensity.current
     val targetSizePx = with(density) { 120.dp.toPx() }
     val targetXPx = with(density) { 20.dp.toPx() }
     val targetYPx = with(density) { 140.dp.toPx() }
@@ -94,7 +96,7 @@ fun Discover(
                 }
             }
         } else if (uiState.isLoading && uiState.recommendPlaylists.isEmpty()) {
-            DiscoverSkeleton(colorScheme)
+            DiscoverSkeleton()
         } else if (uiState.isError && uiState.recommendPlaylists.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -226,7 +228,7 @@ fun Discover(
                                                 }
                                             }
                                     ) {
-                                        com.lr.animation.diysharedelement.modifier.SharedElement(
+                                        SharedElement(
                                             cardId = "playlist_cover_${toplist.id}",
                                             modifier = Modifier
                                                 .width(140.dp)
@@ -277,18 +279,38 @@ fun Discover(
                                     Column(
                                         modifier = Modifier
                                             .width(140.dp)
-                                            .bouncyClickable { /* TODO: Open Album */ }
+                                            .bouncyClickable {
+                                                val ready = cardAnimState.prepareExpand("album_cover_${album.id}") { _ ->
+                                                    CardAnimTransform(
+                                                        x = targetXPx,
+                                                        y = targetYPx,
+                                                        width = targetSizePx,
+                                                        height = targetSizePx,
+                                                        cornerRadius = targetRadiusPx
+                                                    )
+                                                }
+                                                if (ready) {
+                                                    onAlbumClick(album.id, album.picUrl)
+                                                    cardAnimState.animScope.launch { cardAnimState.runExpand() }
+                                                }
+                                            }
                                     ) {
-                                        AsyncImage(
-                                            model = album.picUrl,
-                                            contentDescription = album.name,
-                                            contentScale = ContentScale.Crop,
+                                        SharedElement(
+                                            cardId = "album_cover_${album.id}",
                                             modifier = Modifier
                                                 .width(140.dp)
                                                 .height(140.dp)
-                                                .clip(RoundedCornerShape(16.dp))
-                                                .background(colorScheme.surfaceVariant)
-                                        )
+                                        ) {
+                                            AsyncImage(
+                                                model = album.picUrl,
+                                                contentDescription = album.name,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(RoundedCornerShape(16.dp))
+                                                    .background(colorScheme.surfaceVariant)
+                                            )
+                                        }
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
                                             text = album.name ?: stringResource(id = R.string.unknown_album),
@@ -372,7 +394,7 @@ fun Discover(
 }
 
 @Composable
-private fun DiscoverSkeleton(colorScheme: androidx.compose.material3.ColorScheme) {
+private fun DiscoverSkeleton() {
     LazyColumn(
         contentPadding = PaddingValues(vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)

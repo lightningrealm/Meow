@@ -47,6 +47,7 @@ import com.lr.meow.data.navigation.EntryHomeDetail
 import com.lr.meow.data.navigation.EntryHomeRoot
 import com.lr.meow.data.navigation.EntryLibraryRoot
 import com.lr.meow.data.navigation.EntryPlaylistDetail
+import com.lr.meow.data.navigation.EntryAlbumDetail
 import com.lr.meow.data.navigation.EntryProfileRoot
 import com.lr.meow.data.navigation.EntrySearchRoot
 import com.lr.meow.data.navigation.MyNavTab
@@ -59,6 +60,7 @@ import com.lr.meow.feature.login.Login
 import com.lr.meow.feature.player.PlayerScreen
 import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.feature.playlist.PlaylistDetail
+import com.lr.meow.feature.album.AlbumDetail
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.profile.SharedUserIntent
 import com.lr.meow.feature.profile.SharedUserViewModel
@@ -203,9 +205,14 @@ fun RootView(
                              * Discover对应栈
                              * **/
                             entry<EntryDiscoverRoot> {
-                                Discover(onPlaylistClick = { playlistId, coverImgUrl ->
-                                    discoverStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
-                                })
+                                Discover(
+                                    onPlaylistClick = { playlistId, coverImgUrl ->
+                                        discoverStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                    },
+                                    onAlbumClick = { albumId, coverImgUrl ->
+                                        discoverStack.add(EntryAlbumDetail(albumId, coverImgUrl))
+                                    }
+                                )
                             }
 
                             entry<EntryDiscoverDetail> {
@@ -236,6 +243,9 @@ fun RootView(
                                 Search(
                                     onPlaylistClick = { playlistId, coverImgUrl ->
                                         searchStack.add(EntryPlaylistDetail(playlistId, coverImgUrl))
+                                    },
+                                    onAlbumClick = { albumId, coverImgUrl ->
+                                        searchStack.add(EntryAlbumDetail(albumId, coverImgUrl))
                                     }
                                 )
                             }
@@ -259,6 +269,20 @@ fun RootView(
                             entry<EntryPlaylistDetail> {
                                 PlaylistDetail(
                                     playlistId = it.id,
+                                    coverImgUrl = it.coverImgUrl,
+                                    onBack = { activeStack.removeAt(activeStack.lastIndex) },
+                                    onAlbumClick = { albumId, coverImgUrl ->
+                                        activeStack.add(EntryAlbumDetail(albumId, coverImgUrl))
+                                    }
+                                )
+                            }
+
+                            /**
+                             * Album Detail (Can be in any stack)
+                             * **/
+                            entry<EntryAlbumDetail> {
+                                AlbumDetail(
+                                    albumId = it.id,
                                     coverImgUrl = it.coverImgUrl,
                                     onBack = { activeStack.removeAt(activeStack.lastIndex) }
                                 )

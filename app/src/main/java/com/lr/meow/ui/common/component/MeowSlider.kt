@@ -1,6 +1,11 @@
 package com.lr.meow.ui.common.component
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -27,13 +32,26 @@ fun MeowSlider(
     activeColor: Color = Color.White,
     inactiveColor: Color = Color.White.copy(alpha = 0.3f)
 ) {
-    var width by remember { mutableStateOf(1) } // Default to 1 to avoid divide by zero
+    var width by remember { mutableIntStateOf(1) } // Default to 1 to avoid divide by zero
     var isDragging by remember { mutableStateOf(false) }
 
     val trackHeight = if (isDragging) 6.dp else 4.dp
     val animatedTrackHeight by animateDpAsState(
         targetValue = trackHeight,
         animationSpec = tween(durationMillis = 200)
+    )
+    val progressAnimSpec: AnimationSpec<Float> = if(isDragging){
+        snap()
+    }else{
+        spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        )
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = progressAnimSpec
     )
 
     Box(
@@ -46,12 +64,10 @@ fun MeowSlider(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = { offset ->
-                        isDragging = true
                         val newProgress = (offset.x / width.toFloat()).coerceIn(0f, 1f)
                         onProgressChanged(newProgress)
                         
                         val isReleased = tryAwaitRelease()
-                        isDragging = false
                         if (isReleased) {
                             onProgressChangeFinished()
                         }
@@ -92,7 +108,7 @@ fun MeowSlider(
         // Active track
         Box(
             modifier = Modifier
-                .fillMaxWidth(fraction = progress.coerceIn(0f, 1f))
+                .fillMaxWidth(fraction = animatedProgress.coerceIn(0f, 1f))
                 .height(animatedTrackHeight)
                 .clip(RoundedCornerShape(percent = 50))
                 .background(activeColor)

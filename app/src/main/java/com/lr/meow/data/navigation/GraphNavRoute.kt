@@ -49,3 +49,8 @@ data class EntrySearchDetail(
  * ## Playlist Detail (can be pushed to any stack)
  * **/
 @Serializable data class EntryPlaylistDetail(val id: Long, val coverImgUrl: String? = null): NavKey
+
+/**
+ * ## Album Detail (can be pushed to any stack)
+ * **/
+@Serializable data class EntryAlbumDetail(val id: Long, val coverImgUrl: String? = null): NavKey
