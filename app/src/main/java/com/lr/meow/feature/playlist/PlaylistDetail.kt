@@ -56,6 +56,7 @@ import com.lr.meow.R
 import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
+import com.lr.meow.ui.theme.LocalTopBarPadding
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -228,26 +229,6 @@ fun PlaylistDetail(
                         .background(Color.Black.copy(alpha = 0.6f))
                 )
 
-
-                TopAppBar(
-                    title = { Text(stringResource(id = R.string.playlist), color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            cardAnimState.prepareCollapse()
-                            onBack()
-                            cardAnimState.animScope.launch { cardAnimState.runCollapse() }
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
-                )
 
                 // Playlist Info
                 Row(

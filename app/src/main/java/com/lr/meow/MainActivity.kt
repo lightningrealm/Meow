@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,17 +42,19 @@ import com.lr.animation.diysharedelement.component.CardAnimRoot
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.state.CardAnimState
 import com.lr.glassui.captureBackground
+import com.lr.meow.data.navigation.EntryAlbumDetail
+import com.lr.meow.data.navigation.EntryArtistDetail
 import com.lr.meow.data.navigation.EntryDiscoverDetail
 import com.lr.meow.data.navigation.EntryDiscoverRoot
 import com.lr.meow.data.navigation.EntryHomeDetail
 import com.lr.meow.data.navigation.EntryHomeRoot
 import com.lr.meow.data.navigation.EntryLibraryRoot
 import com.lr.meow.data.navigation.EntryPlaylistDetail
-import com.lr.meow.data.navigation.EntryAlbumDetail
-import com.lr.meow.data.navigation.EntryArtistDetail
 import com.lr.meow.data.navigation.EntryProfileRoot
 import com.lr.meow.data.navigation.EntrySearchRoot
 import com.lr.meow.data.navigation.MyNavTab
+import com.lr.meow.feature.album.AlbumDetail
+import com.lr.meow.feature.artist.ArtistDetail
 import com.lr.meow.feature.discover.Discover
 import com.lr.meow.feature.discover.DiscoverDetail
 import com.lr.meow.feature.home.Home
@@ -61,20 +64,19 @@ import com.lr.meow.feature.login.Login
 import com.lr.meow.feature.player.PlayerScreen
 import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.feature.playlist.PlaylistDetail
-import com.lr.meow.feature.album.AlbumDetail
-import com.lr.meow.feature.artist.ArtistDetail
 import com.lr.meow.feature.profile.Profile
 import com.lr.meow.feature.profile.SharedUserIntent
 import com.lr.meow.feature.profile.SharedUserViewModel
 import com.lr.meow.feature.search.Search
-import com.lr.meow.ui.common.component.glass.CircleFrostedGlassButton
 import com.lr.meow.ui.common.component.glass.CustomFrostedGlassBottomBar
 import com.lr.meow.ui.common.component.glass.FloatingTopBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalIsMusicPlaying
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
+import com.lr.meow.ui.theme.LocalTopBarPadding
 import com.lr.meow.ui.theme.MeowTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -124,6 +126,7 @@ fun RootView(
     // 如果大于 1，说明进到了深层页面，隐藏底栏。
     val isBottomBarVisible = activeStack.size == 1
     var bottomBarHeight by remember { mutableStateOf(0.dp) }
+    var topBarHeight by remember { mutableStateOf(0.dp) }
 
     // 平滑性能优化：延迟关闭截图。等底栏的 fadeOut 退出动画播完后，再关闭采集，彻底杜绝“突兀感”
     var isCaptureEnabled by remember { mutableStateOf(true) }
@@ -169,6 +172,7 @@ fun RootView(
             ) {
                 CompositionLocalProvider(
                     LocalBottomBarPadding provides bottomBarHeight,
+                    LocalTopBarPadding provides topBarHeight,
                     LocalIsLogin provides uiState.isLoggedIn,
                     LocalRequireAuth provides { viewModel.dispatch(MainIntent.RequestLogin) },
                     LocalCardAnimState provides cardAnimState
@@ -334,10 +338,10 @@ fun RootView(
             ) {
                 CustomFrostedGlassBottomBar(
                     modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            if (!showPlayerScreen) {
-                                bottomBarHeight = with(density) {
-                                    coordinates.size.height.toDp() + 16.dp
+                        .onLayoutRectChanged{
+                            if(!showPlayerScreen){
+                                bottomBarHeight = with(density){
+                                    it.height.toDp()+16.dp
                                 }
                             }
                         },
@@ -360,9 +364,26 @@ fun RootView(
                 )
             }
 
-            /*FloatingTopBar(
-                graphicsLayer = backgroundLayer
-            ) { }*/
+            AnimatedVisibility(
+                visible = !isBottomBarVisible&&!showPlayerScreen,
+                enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
+                FloatingTopBar(
+                    graphicsLayer = backgroundLayer,
+                    modifier = Modifier
+                        .onLayoutRectChanged{
+                            topBarHeight = with(density){
+                                it.height.toDp()
+                            }
+                        }
+                ) {
+                    cardAnimState.prepareCollapse()
+                    activeStack.removeAt(activeStack.lastIndex)
+                    cardAnimState.animScope.launch { cardAnimState.runCollapse() }
+                }
+            }
 
             Login(
                 showBottomSheet = uiState.showLoginSheet,

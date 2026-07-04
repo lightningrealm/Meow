@@ -17,13 +17,15 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FloatingTopBar(
     graphicsLayer: GraphicsLayer,
+    modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding() // 仅在此处加状态栏高度，防止被状态栏遮挡
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .then(modifier),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // 圆形半透明返回键

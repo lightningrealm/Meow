@@ -48,6 +48,7 @@ import com.lr.meow.ui.theme.LocalBottomBarPadding
 
 import org.koin.androidx.compose.koinViewModel
 import com.lr.meow.feature.profile.SharedUserViewModel
+import com.lr.meow.ui.theme.LocalTopBarPadding
 
 @Composable
 fun PersonalFmContent(
@@ -100,7 +101,10 @@ fun PersonalFmContent(
         }
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(Modifier.statusBarsPadding())
+            Spacer(
+                Modifier
+                    .padding(LocalTopBarPadding.current)
+            )
             Column(
                 modifier = Modifier.padding(
                     start = 20.dp,

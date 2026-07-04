@@ -185,13 +185,6 @@ fun ArtistDetail(
                 }
             }
         }
-
-        // 2. 悬浮在最顶部的导航栏 (不受滑动影响，固定在顶部)
-        FloatingTopBar(onBack = {
-            cardAnimState.prepareCollapse()
-            onBack()
-            cardAnimState.animScope.launch { cardAnimState.runCollapse() }
-        })
     }
 }
 

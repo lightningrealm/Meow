@@ -1,17 +1,33 @@
 package com.lr.meow.feature.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
@@ -27,9 +43,7 @@ import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.components.shimmerEffect
 import com.lr.meow.ui.theme.LocalBottomBarPadding
-import androidx.compose.ui.geometry.Offset
-import com.lr.meow.ui.common.component.glass.CircleFrostedGlassButton
-import com.lr.meow.ui.theme.LocalRootGraphicsLayer
+import com.lr.meow.ui.theme.LocalTopBarPadding
 
 @Composable
 fun DailyRecommendContent(
@@ -58,7 +72,7 @@ fun DailyRecommendContent(
             }
         }
     } else if (uiState.isLoading && uiState.recommendSongs.isEmpty()) {
-        DailyRecommendSkeleton(colorScheme)
+        DailyRecommendSkeleton()
     } else if (uiState.isError && uiState.recommendSongs.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -81,7 +95,9 @@ fun DailyRecommendContent(
             modifier = Modifier.fillMaxSize()
         ) {
             item {
-                Spacer(Modifier.statusBarsPadding())
+                Spacer(Modifier
+                    .padding(top= LocalTopBarPadding.current)
+                )
                 Column(modifier = Modifier.padding(bottom = 24.dp, top = 16.dp)) {
                     Text(
                         text = "DAILY RECOMMEND",
@@ -182,13 +198,13 @@ fun DailyRecommendContent(
 }
 
 @Composable
-fun DailyRecommendSkeleton(colorScheme: ColorScheme) {
+fun DailyRecommendSkeleton() {
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(Modifier.statusBarsPadding())
+            Spacer(Modifier.padding(top = LocalTopBarPadding.current))
             Box(Modifier.width(160.dp).height(40.dp).clip(RoundedCornerShape(8.dp)).shimmerEffect())
             Spacer(Modifier.height(16.dp))
         }

@@ -4,9 +4,9 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,7 +47,7 @@ fun CircleFrostedGlassButton(
         )
     }
     val targetGlassTint = remember(glassEnv) {
-        val baseGlass = if (glassEnv.isDark) Color(0xFF111111) else Color(0xFFEEEEEE)
+        val baseGlass = if (glassEnv.isDark) Color(0xFF707070) else Color(0xFFCECECE)
         lerp(baseGlass, glassEnv.dominantColor, 0.2f)
     }
     val glassTint by animateColorAsState(
@@ -57,11 +57,9 @@ fun CircleFrostedGlassButton(
 
     // 3. 动态高光边框 (Rim Light)
     val borderLight by animateColorAsState(
-        targetValue = (if (glassEnv.isDark) Color.White else Color.Black)
-            .copy(alpha = if (glassEnv.isDark) 0.6f else 0.25f),
+        targetValue = glassEnv.dominantColor.copy(alpha = if (glassEnv.isDark) 0.6f else 0.25f),
         animationSpec = tween(500)
     )
-
     val onGlassColor by animateColorAsState(
         targetValue = if (glassEnv.isDark) {
             Color.White.copy(alpha = 0.5f)
@@ -80,7 +78,9 @@ fun CircleFrostedGlassButton(
             .clip(RoundedCornerShape(radius))
             .glassBlurBackground(
                 graphicsLayer,
-                blurRadius = 0f,
+                blurRadius = 5f,
+                refractionFactor = 15f,
+                dispersionFactor = 2f,
                 cornerRadiusPx = with(density){20.dp.toPx()},
             ) { glassEnvironment ->
                 glassEnv = glassEnvironment
@@ -92,6 +92,9 @@ fun CircleFrostedGlassButton(
                 color = borderLight,
                 shape = RoundedCornerShape(radius)
             )
+            .clickable{
+                onClick()
+            }
             .then(modifier),
         contentAlignment = Alignment.Center
     ) {
