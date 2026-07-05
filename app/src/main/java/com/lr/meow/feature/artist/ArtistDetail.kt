@@ -1,6 +1,7 @@
 package com.lr.meow.feature.artist
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
@@ -34,10 +33,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,7 +85,7 @@ fun ArtistDetail(
         onBack()
         cardAnimState.animScope.launch { cardAnimState.runCollapse() }
     }
-    
+
     // 使用 Box 作为根布局，实现沉浸式头部和悬浮 TopBar
     Box(
         modifier = Modifier
@@ -94,6 +97,13 @@ fun ArtistDetail(
         val displayName = detail?.name ?: artistName
         val topSongs = uiState.topSongs
         val albums = uiState.hotAlbums
+
+
+        // 1. 记录展开状态
+        var isExpanded by remember { mutableStateOf(false) }
+
+        // 2. 根据状态决定当前该显示多少条数据
+        val displaySongs = if (isExpanded) topSongs else topSongs.take(10)
 
         // 1. 可滚动的主体内容
         LazyColumn(
@@ -116,19 +126,24 @@ fun ArtistDetail(
 
             if (uiState.isLoading) {
                 item {
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp), contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator(color = colorScheme.primary)
                     }
                 }
             } else if (uiState.isError) {
                 item {
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp), contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = uiState.errorMessage?.asString() ?: stringResource(id = R.string.load_failed),
+                            text = uiState.errorMessage?.asString()
+                                ?: stringResource(id = R.string.load_failed),
                             color = colorScheme.error
                         )
                     }
@@ -139,16 +154,38 @@ fun ArtistDetail(
                     item {
                         SectionTitle(title = "热门单曲", subtitle = "Top 50")
                     }
-                    
-                    itemsIndexed(topSongs) { index, song -> 
+
+                    itemsIndexed(
+                        items = displaySongs,
+                        key = { _, song -> song.id }
+                    ) { index, song ->
                         SongListItem(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = tween(300),
+                                fadeOutSpec = tween(300),
+                                placementSpec = tween(300)
+                            ),
                             index = index + 1,
                             songName = song.name ?: stringResource(id = R.string.unknown_song),
-                            albumName = song.al?.name ?: stringResource(id = R.string.unknown_album),
+                            albumName = song.al?.name
+                                ?: stringResource(id = R.string.unknown_album),
                             onClick = {
                                 playerViewModel.playSongs(topSongs, index)
                             }
                         )
+                    }
+                    if (topSongs.size > 10) {
+                        item(key = "expand_button") { // 同样给按钮加个 key，防重组错乱
+                            TextButton(
+                                onClick = { isExpanded = !isExpanded },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .animateItem() // 让按钮在列表伸缩时也跟着平滑移动
+                            ) {
+                                Text(text = if (isExpanded) "收起" else "查看全部 ${topSongs.size} 首")
+                            }
+                        }
                     }
                 }
 
@@ -163,7 +200,8 @@ fun ArtistDetail(
                         ) {
                             items(albums) { album ->
                                 AlbumItem(
-                                    albumName = album.name ?: stringResource(id = R.string.unknown_album),
+                                    albumName = album.name
+                                        ?: stringResource(id = R.string.unknown_album),
                                     year = "${album.size} 首歌曲",
                                     picUrl = album.picUrl ?: ""
                                 )
@@ -171,7 +209,7 @@ fun ArtistDetail(
                         }
                     }
                 }
-                
+
                 // --- 歌手信息/简介 ---
                 item {
                     SectionTitle(title = "关于歌手")
@@ -189,7 +227,12 @@ fun ArtistDetail(
 }
 
 @Composable
-private fun ArtistHeader(artistId: Long, artistName: String, imageUrl: String, onPlayAll: () -> Unit) {
+private fun ArtistHeader(
+    artistId: Long,
+    artistName: String,
+    imageUrl: String,
+    onPlayAll: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,7 +296,11 @@ private fun ArtistHeader(artistId: Long, artistName: String, imageUrl: String, o
                     ),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
                 ) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("播放全部", fontWeight = FontWeight.Bold)
                 }
@@ -269,38 +316,6 @@ private fun ArtistHeader(artistId: Long, artistName: String, imageUrl: String, o
                     Text("关注")
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun FloatingTopBar(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding() // 仅在此处加状态栏高度，防止被状态栏遮挡
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        // 圆形半透明返回键
-        IconButton(
-            onClick = { onBack() },
-            modifier = Modifier
-                .background(Color.Black.copy(alpha = 0.4f), CircleShape)
-                .size(40.dp)
-        ) {
-            Icon(Icons.Default.ArrowBackIosNew, contentDescription = "More", tint = Color.White)
-        }
-
-
-        // 圆形半透明更多键
-        IconButton(
-            onClick = { /* TODO */ },
-            modifier = Modifier
-                .background(Color.Black.copy(alpha = 0.4f), CircleShape)
-                .size(40.dp)
-        ) {
-            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
         }
     }
 }
@@ -333,9 +348,16 @@ private fun SectionTitle(title: String, subtitle: String? = null) {
 }
 
 @Composable
-private fun SongListItem(index: Int, songName: String, albumName: String, onClick: () -> Unit) {
+private fun SongListItem(
+    modifier: Modifier = Modifier,
+    index: Int,
+    songName: String,
+    albumName: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
+            .then(modifier)
             .fillMaxWidth()
             .bouncyClickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 10.dp),
@@ -346,10 +368,12 @@ private fun SongListItem(index: Int, songName: String, albumName: String, onClic
             text = index.toString(),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = if (index <= 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            color = if (index <= 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                alpha = 0.4f
+            ),
             modifier = Modifier.width(32.dp)
         )
-        
+
         // 歌曲信息
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -373,7 +397,7 @@ private fun SongListItem(index: Int, songName: String, albumName: String, onClic
         // 更多操作
         IconButton(onClick = { /*TODO*/ }) {
             Icon(
-                Icons.Default.MoreVert, 
+                Icons.Default.MoreVert,
                 contentDescription = "More",
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )

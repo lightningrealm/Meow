@@ -17,39 +17,38 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import com.lr.animation.diysharedelement.component.LocalCardAnimState
-import com.lr.animation.diysharedelement.modifier.SharedElement
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.lr.meow.R
-
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
+import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.model.CardAnimTransform
+import com.lr.animation.diysharedelement.modifier.SharedElement
+import com.lr.meow.R
 import com.lr.meow.data.cardface.CardFaceData
 import com.lr.meow.ui.common.card.CardFace
 import com.lr.meow.ui.theme.LocalBottomBarPadding
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun Home(
+    viewModel: HomeViewModel = koinViewModel(),
     onNavigateToDetail: (Int) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val configuration = LocalConfiguration.current
-    val density = LocalDensity.current
-    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
-    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
+    val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
+    val screenHeightPx = LocalWindowInfo.current.containerSize.height.toFloat()
 
     val mockCards = listOf(
         CardFaceData(
@@ -79,8 +78,9 @@ fun Home(
                         .padding(horizontal = 20.dp)
                         .padding(top = 16.dp, bottom = 10.dp)
                 ) {
+                    val uiState by viewModel.uiState.collectAsState()
                     Text(
-                        text = "Wednesday, 25 June",
+                        text = uiState.todayDate,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = 0.3.sp,

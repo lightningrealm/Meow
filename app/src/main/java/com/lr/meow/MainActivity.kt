@@ -41,6 +41,7 @@ import com.lr.animation.diysharedelement.component.CardAnimRoot
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.state.CardAnimState
 import com.lr.glassui.captureBackground
+import com.lr.meow.data.TopBarMenuItem
 import com.lr.meow.data.navigation.EntryAlbumDetail
 import com.lr.meow.data.navigation.EntryArtistDetail
 import com.lr.meow.data.navigation.EntryDiscoverDetail
@@ -72,6 +73,7 @@ import com.lr.meow.ui.common.component.glass.FloatingTopBar
 import com.lr.meow.ui.theme.LocalBottomBarPadding
 import com.lr.meow.ui.theme.LocalIsMusicPlaying
 import com.lr.meow.ui.theme.LocalRootGraphicsLayer
+import com.lr.meow.ui.theme.LocalTopBarMenuItems
 import com.lr.meow.ui.theme.LocalTopBarPadding
 import com.lr.meow.ui.theme.MeowTheme
 import kotlinx.coroutines.delay
@@ -86,8 +88,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MeowTheme {
                 val backgroundLayer = rememberGraphicsLayer()
+                val topBarMenuItems = remember{mutableListOf<TopBarMenuItem>()}
                 CompositionLocalProvider(
-                    LocalRootGraphicsLayer provides backgroundLayer
+                    LocalRootGraphicsLayer provides backgroundLayer,
+                    LocalTopBarMenuItems provides topBarMenuItems
                 ) {
                     RootView()
                 }
@@ -147,7 +151,6 @@ fun RootView(
     val sourceCornerRadiusPx =
         with(LocalDensity.current) { 20.dp.toPx() } // 与 CardFace 的 RoundedCornerShape(20.dp) 一致
     val cardAnimScope = rememberCoroutineScope()
-    android.util.Log.d("SCOPE_TEST", "MainActivity scope: ${cardAnimScope.coroutineContext}")
     val cardAnimState = remember {
         CardAnimState(sourceCornerRadiusPx, cardAnimScope)
     }

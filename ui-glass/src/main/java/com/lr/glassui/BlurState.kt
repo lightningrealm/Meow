@@ -25,9 +25,14 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onLayoutRectChanged
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.roundToIntRect
 import androidx.core.graphics.get
 import androidx.core.graphics.withSave
 import com.lr.glassui.model.GlassEnvironment
@@ -196,8 +201,18 @@ fun Modifier.glassBlurBackground(
         }
     }
 
-    this.onLayoutRectChanged(throttleMillis = 0, debounceMillis = 0) { bounds ->
+    /*this.onLayoutRectChanged(throttleMillis = 0, debounceMillis = 0) { bounds ->
         barRect = bounds.boundsInRoot
+    }*/
+    this.onGloballyPositioned { coordinates ->
+        // 1. 获取物理屏幕的绝对坐标，并四舍五入转化为 IntOffset
+        val absoluteOffset = coordinates.positionOnScreen().round()
+
+        // 2. size 本身就是 IntSize
+        val size = coordinates.size
+
+        // 3. 用 IntOffset 和 IntSize 组合出纯粹的 IntRect
+        barRect = IntRect(offset = absoluteOffset, size = size)
     }
     .drawBehind{
         if(barRect.isEmpty||layer.size.width==0){

@@ -5,19 +5,25 @@ import androidx.lifecycle.viewModelScope
 import com.lr.core.network.api.MeowRecommendService
 import com.lr.core.network.model.RecommendPlaylist
 import com.lr.core.network.model.Song
+import com.lr.meow.R
+import com.lr.meow.ui.common.util.UiText
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-import com.lr.meow.ui.common.util.UiText
-import com.lr.meow.R
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.time.toKotlinDuration
 
 data class HomeUiState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val needsLogin: Boolean = false,
     val errorMessage: UiText? = null,
+    val todayDate: String = "",
     val recommendPlaylists: List<RecommendPlaylist> = emptyList(),
     val recommendSongs: List<Song> = emptyList()
 )
@@ -28,6 +34,25 @@ class HomeViewModel(
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    init {
+        startDateTicker()
+    }
+
+    private fun startDateTicker(){
+        viewModelScope.launch {
+            while (true){
+                val now = LocalDateTime.now()
+                val formatter = DateTimeFormatter.ofPattern("M月d日 EEE", Locale.CHINESE)
+                val fullDateStr = now.format(formatter)
+                _uiState.value = _uiState.value.copy(
+                    todayDate = fullDateStr
+                )
+                val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay()
+                delay(Duration.between(now,nextMidnight).toKotlinDuration())
+            }
+        }
+    }
 
     fun fetchRecommendSongs() {
         if (_uiState.value.recommendSongs.isNotEmpty()) return // Already fetched

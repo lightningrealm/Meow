@@ -19,17 +19,16 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -53,10 +52,11 @@ import coil3.request.crossfade
 import com.lr.animation.diysharedelement.component.LocalCardAnimState
 import com.lr.animation.diysharedelement.modifier.SharedElementTarget
 import com.lr.meow.R
+import com.lr.meow.data.TopBarMenuItem
 import com.lr.meow.feature.player.PlayerViewModel
 import com.lr.meow.ui.components.bouncyClickable
 import com.lr.meow.ui.theme.LocalBottomBarPadding
-import com.lr.meow.ui.theme.LocalTopBarPadding
+import com.lr.meow.ui.theme.LocalTopBarMenuItems
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -78,6 +78,21 @@ fun PlaylistDetail(
         viewModel.handleIntent(PlaylistDetailIntent.LoadPlaylist(playlistId))
     }
 
+    val topBarMenuItems = LocalTopBarMenuItems.current
+    DisposableEffect(Unit) {
+        topBarMenuItems.add(
+            TopBarMenuItem(
+                "开发中..",
+                Icons.Default.Lightbulb,
+                {
+
+                }
+            )
+        )
+        onDispose {
+            topBarMenuItems.clear()
+        }
+    }
     val cardAnimState = LocalCardAnimState.current
 
     BackHandler {
