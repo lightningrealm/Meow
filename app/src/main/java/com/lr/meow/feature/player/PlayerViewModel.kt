@@ -38,6 +38,7 @@ class PlayerViewModel(
     val playbackState = musicController.playbackState
     val isPlaying = musicController.isPlaying
     val currentMediaItem = musicController.currentMediaItem
+    val shuffleModeEnable = musicController.shuffleModeEnable
     val currentPosition = musicController.currentPosition
     val duration = musicController.duration
     private val _lyricState = MutableStateFlow<LyricUiState>(LyricUiState.Loading)
@@ -147,6 +148,10 @@ class PlayerViewModel(
     override fun onCleared() {
         musicController.release()
         super.onCleared()
+    }
+
+    fun toggleShuffle(){
+        musicController.toggleShuffleMode()
     }
 
     fun playSongs(songs: List<Song>, startIndex: Int = 0) {

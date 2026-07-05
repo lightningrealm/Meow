@@ -31,6 +31,9 @@ class MusicController(private val context: Context) {
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
+    private val _shuffleModeEnabled = MutableStateFlow(false)
+    val shuffleModeEnable = _shuffleModeEnabled.asStateFlow()
+
     suspend fun initialize() {
         val sessionToken = SessionToken(
             context,
@@ -52,6 +55,7 @@ class MusicController(private val context: Context) {
         _playbackState.value = controller.playbackState
         _isPlaying.value = controller.isPlaying
         _currentMediaItem.value = controller.currentMediaItem
+        _shuffleModeEnabled.value = controller.shuffleModeEnabled
         updateProgress()
     }
 
@@ -109,6 +113,12 @@ class MusicController(private val context: Context) {
         }
     }
 
+    fun toggleShuffleMode() {
+        controller?.let {
+            it.shuffleModeEnabled = !it.shuffleModeEnabled
+        }
+    }
+
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(state: Int) {
             _playbackState.value = state
@@ -123,6 +133,10 @@ class MusicController(private val context: Context) {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             _currentMediaItem.value = mediaItem
             updateProgress()
+        }
+
+        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+            _shuffleModeEnabled.value = shuffleModeEnabled
         }
     }
 }

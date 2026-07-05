@@ -77,7 +77,7 @@ fun CustomFrostedGlassBottomBar(
     // 1. 动态玻璃底色：在基础黑白玻璃上，融入 20% 的环境主色调
     val targetGlassTint = remember(glassEnv) {
         val baseGlass = if (glassEnv.isDark) Color(0xFF111111) else Color(0xFFEEEEEE)
-        lerp(baseGlass, glassEnv.dominantColor, 0.5f)
+        lerp(baseGlass, glassEnv.dominantColor, 0.3f)
     }
     val glassTint by animateColorAsState(
         targetValue = targetGlassTint.copy(alpha = if (glassEnv.isDark) 0.5f else 0.7f),
