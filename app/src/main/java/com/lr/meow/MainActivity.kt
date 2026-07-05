@@ -30,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -157,6 +156,18 @@ fun RootView(
 
     val currentSong by playerViewModel.currentMediaItem.collectAsState()
     val isMusicPlayingState = currentSong != null
+
+    // 在 isBottomBarVisible 旁边加：
+    var isTopBarVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(isBottomBarVisible, showPlayerScreen) {
+        if (!isBottomBarVisible && !showPlayerScreen) {
+            delay(250.milliseconds) // 等卡片过渡动画结束（约300ms）再渲染玻璃
+            isTopBarVisible = true
+        } else {
+            isTopBarVisible = false  // 立即隐藏，不用等动画
+        }
+    }
+
 
     CompositionLocalProvider(
         LocalIsMusicPlaying provides isMusicPlayingState
@@ -365,7 +376,7 @@ fun RootView(
             }
 
             AnimatedVisibility(
-                visible = !isBottomBarVisible&&!showPlayerScreen,
+                visible = isTopBarVisible,
                 enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
                 modifier = Modifier.align(Alignment.TopStart)
@@ -375,7 +386,7 @@ fun RootView(
                     modifier = Modifier
                         .onLayoutRectChanged{
                             topBarHeight = with(density){
-                                it.height.toDp()
+                                it.height.toDp()+8.dp
                             }
                         }
                 ) {

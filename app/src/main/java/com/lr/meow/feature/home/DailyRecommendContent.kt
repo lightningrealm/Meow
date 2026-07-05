@@ -200,11 +200,15 @@ fun DailyRecommendContent(
 @Composable
 fun DailyRecommendSkeleton() {
     LazyColumn(
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = 20.dp+LocalTopBarPadding.current,
+            bottom = 20.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(Modifier.padding(top = LocalTopBarPadding.current))
             Box(Modifier.width(160.dp).height(40.dp).clip(RoundedCornerShape(8.dp)).shimmerEffect())
             Spacer(Modifier.height(16.dp))
         }

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -48,7 +49,7 @@ fun CircleFrostedGlassButton(
     }
     val targetGlassTint = remember(glassEnv) {
         val baseGlass = if (glassEnv.isDark) Color(0xFF707070) else Color(0xFFCECECE)
-        lerp(baseGlass, glassEnv.dominantColor, 0.2f)
+        lerp(baseGlass, glassEnv.dominantColor, 0.05f)
     }
     val glassTint by animateColorAsState(
         targetValue = targetGlassTint.copy(alpha = if (glassEnv.isDark) 0.5f else 0.7f),
@@ -92,7 +93,9 @@ fun CircleFrostedGlassButton(
                 color = borderLight,
                 shape = RoundedCornerShape(radius)
             )
-            .clickable{
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() }
+            ){
                 onClick()
             }
             .then(modifier),
