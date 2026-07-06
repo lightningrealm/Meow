@@ -1,5 +1,9 @@
 # 🎵 Meow
 
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-blue.svg)](https://kotlinlang.org) 
+[![Jetpack Compose](https://img.shields.io/badge/Compose-1.7+-4285F4.svg)](https://developer.android.com/jetpack/compose)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 一款基于 **Jetpack Compose** 构建的 **Material Design 3** 风格现代音乐播放器。
 
 ---
@@ -161,6 +165,6 @@ dependencies {
 ## 👤 作者信息
 
 * **Author**: lightningrealm
-* **GitHub**: [@lightningrealm](https://www.google.com/search?q=https://github.com/lightningrealm)
+* **GitHub**: [@lightningrealm](https://github.com/lightningrealm)
 
 如果你觉得 **Meow** 对你的 Compose 模块化学习或者高级着色器开发有所启发，欢迎为本项目点上一颗 ⭐ **Star**！这对我持续优化架构是巨大的鼓励！
